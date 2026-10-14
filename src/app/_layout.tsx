@@ -1,18 +1,20 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Stack } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
+import { useFonts } from 'expo-font'
+import { VT323_400Regular } from '@expo-google-fonts/vt323'
+import { PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p'
+import { SessionProvider } from '@/lib/session'
+import { ToastProvider } from '@/lib/toast'
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
-
-SplashScreen.preventAutoHideAsync();
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
+  const [loaded, error] = useFonts({ VT323_400Regular, PressStart2P_400Regular })
+  if (!loaded && !error) return null
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
-  );
+    <SessionProvider>
+      <ToastProvider>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false }} />
+      </ToastProvider>
+    </SessionProvider>
+  )
 }
