@@ -115,7 +115,7 @@ export function Market({ kind }: { kind: Kind }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 14, gap: 14 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 14, gap: 14 }}>
         <Txt variant="muted">
           {isReq ? 'Item che altri cercano: vendi quello che hai.' : 'Item in vendita: scegli cosa comprare.'}
         </Txt>
