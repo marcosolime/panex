@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 import { fonts, useTheme } from '@/theme'
-import { Badge, Btn, Card, Checkbox, Grid, ItemIcon, Select, Txt, fmt } from '@/components/ui'
+import { Badge, Btn, Card, FilterSwitch, Grid, ItemIcon, Select, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog, Dialog, ListingDialog } from '@/components/dialogs'
 
 type Kind = 'offer' | 'request'
@@ -115,7 +115,7 @@ export function Market({ kind }: { kind: Kind }) {
         </Txt>
         <View style={[s.row, { gap: 12 }]}>
           <Btn title={isReq ? '+ Nuova richiesta' : '+ Nuova offerta'} onPress={() => setCreating(true)} />
-          <Checkbox label="Solo le mie" value={mine} onChange={setMine} />
+          <FilterSwitch label="Solo le mie" value={mine} onChange={setMine} />
         </View>
         <View style={[s.row, { alignItems: 'flex-start' }]}>
           <TextInput value={q} onChangeText={setQ} placeholder="Cerca item o utente" placeholderTextColor={t.muted}
