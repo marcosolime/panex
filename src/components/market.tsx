@@ -92,17 +92,23 @@ export function Market({ kind }: { kind: Kind }) {
         <Txt variant="price" style={{ marginTop: 8 }}>{fmt(r.unit_price)} Tosi / unità</Txt>
         {!!r.note && <Txt variant="muted">Note: {r.note}</Txt>}
         <Txt variant="muted">{isReq ? 'richiesta di ' : 'di '}{r.profiles?.username ?? '?'} · {new Date(r.created_at).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</Txt>
-        <View style={[s.row, { marginTop: 10 }]}>
-          {r.owner_id === me ? (
-            <>
-              <Badge text={isReq ? 'Tua richiesta' : 'Tua offerta'} />
-              <Btn title="Modifica" variant="alt" onPress={() => setEditing(r)} />
-              <Btn title="Ritira" variant="danger" onPress={() => { setWdErr(''); setWithdrawing(r) }} />
-            </>
-          ) : (
+        {r.owner_id === me ? (
+          <View style={s.ownerActions}>
+            <Badge text={isReq ? 'Tua richiesta' : 'Tua offerta'} />
+            <View style={s.actionButtons}>
+              <View style={s.actionButton}>
+                <Btn title="Modifica" variant="alt" full compact onPress={() => setEditing(r)} />
+              </View>
+              <View style={s.actionButton}>
+                <Btn title="Ritira" variant="danger" full compact onPress={() => { setWdErr(''); setWithdrawing(r) }} />
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View style={{ marginTop: 10, alignSelf: 'flex-start' }}>
             <Btn title={isReq ? 'Vendi' : 'Compra'} onPress={() => setSelected(r)} />
-          )}
-        </View>
+          </View>
+        )}
       </Card>
     )
   }
@@ -204,4 +210,7 @@ function OrderDialog({ row, isReq, onClose, onDone }: {
 const s = StyleSheet.create({
   input: { borderWidth: 3, paddingHorizontal: 8, paddingVertical: 4, fontFamily: fonts.body, fontSize: 22 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  ownerActions: { marginTop: 10, gap: 8 },
+  actionButtons: { flexDirection: 'row', gap: 8 },
+  actionButton: { flex: 1 },
 })

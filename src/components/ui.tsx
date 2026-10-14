@@ -16,8 +16,8 @@ export function Txt({ variant = 'body', style, ...props }: TextProps & { variant
   return <Text style={[{ color }, font, style]} {...props} />
 }
 
-export function Btn({ title, onPress, variant = 'primary', disabled, active, full }: {
-  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger'; disabled?: boolean; active?: boolean; full?: boolean
+export function Btn({ title, onPress, variant = 'primary', disabled, active, full, compact }: {
+  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger'; disabled?: boolean; active?: boolean; full?: boolean; compact?: boolean
 }) {
   const t = useTheme()
   const bg = variant === 'primary' ? t.green : variant === 'danger' ? t.red : t.soft
@@ -25,8 +25,8 @@ export function Btn({ title, onPress, variant = 'primary', disabled, active, ful
     <Pressable onPress={onPress} disabled={disabled}
       style={({ pressed }) => [s.btnOuter, full && { alignSelf: 'stretch' },
         { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }] }]}>
-      <View style={[s.btn, { backgroundColor: bg }]}>
-        <Text style={{ fontFamily: fonts.body, fontSize: 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
+      <View style={[s.btn, compact && { paddingHorizontal: 6 }, { backgroundColor: bg }]}>
+        <Text numberOfLines={compact ? 1 : undefined} style={{ fontFamily: fonts.body, fontSize: 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
       </View>
     </Pressable>
   )
