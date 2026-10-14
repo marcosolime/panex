@@ -1,98 +1,77 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react'
+import { Button, FlatList, StyleSheet, Text, TextInput, View } from 'react-native'
+import type { Session } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+type Item = { id: string; name: string }
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+// Schermata di prova: login con email e password, poi lettura della tabella items.
+export default function Home() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [items, setItems] = useState<Item[]>([])
+  const [total, setTotal] = useState<number | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    if (!session) return
+    supabase
+      .from('items')
+      .select('id, name', { count: 'exact' })
+      .order('name')
+      .limit(10)
+      .then(({ data, count, error }) => {
+        if (error) setError(error.message)
+        else {
+          setItems(data ?? [])
+          setTotal(count)
+        }
+      })
+  }, [session])
+
+  async function signIn() {
+    setError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) setError(error.message)
   }
-  if (Device.isDevice) {
+
+  if (!session) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
+      <View style={styles.box}>
+        <Text style={styles.title}>PanEx</Text>
+        <TextInput style={styles.input} placeholder="Email" autoCapitalize="none"
+          keyboardType="email-address" value={email} onChangeText={setEmail} />
+        <TextInput style={styles.input} placeholder="Password" secureTextEntry
+          value={password} onChangeText={setPassword} />
+        <Button title="Accedi" onPress={signIn} />
+        {!!error && <Text style={styles.error}>{error}</Text>}
+      </View>
+    )
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
+    <View style={styles.box}>
+      <Text style={styles.title}>Connessione riuscita</Text>
+      <Text>Accesso come {session.user.email}</Text>
+      <Text>Item nel catalogo: {total ?? '...'}</Text>
+      <FlatList data={items} keyExtractor={(i) => i.id}
+        renderItem={({ item }) => <Text>{item.name}</Text>} />
+      {!!error && <Text style={styles.error}>{error}</Text>}
+      <Button title="Esci" onPress={() => supabase.auth.signOut()} />
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
+  box: { flex: 1, padding: 24, paddingTop: 64, gap: 12 },
+  title: { fontSize: 24, fontWeight: 'bold' },
+  input: { borderWidth: 1, borderColor: '#999', padding: 10 },
+  error: { color: 'crimson' },
+})
