@@ -59,7 +59,7 @@ export default function Movimenti() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 14, gap: 14 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 14, gap: 14 }}>
         <Grid data={stats} keyOf={(x) => x.key} render={(x) => (
           <Card>
             <Txt variant="muted">{x.label}</Txt>
