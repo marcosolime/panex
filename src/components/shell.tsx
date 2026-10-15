@@ -32,7 +32,8 @@ export function AppHeader() {
 }
 
 const TABS = [
-  ['/', 'Offerte'],
+  ['/', 'Home'],
+  ['/offerte', 'Offerte'],
   ['/richieste', 'Richieste'],
   ['/ordini', 'Ordini'],
   ['/movimenti', 'Movimenti'],
@@ -49,7 +50,7 @@ export function Nav({ bottom }: { bottom?: boolean }) {
              : { paddingVertical: 16 }]}>
       {TABS.map(([href, label]) => (
         <View key={href} style={bottom ? { flex: 1 } : undefined}>
-          <Btn title={label} variant="alt" full={bottom} active={path === href} onPress={() => router.navigate(href)} />
+          <Btn title={label} variant="alt" full={bottom} compact={bottom} active={path === href} onPress={() => router.navigate(href)} />
         </View>
       ))}
     </View>

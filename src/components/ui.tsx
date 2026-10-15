@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Pressable, StyleSheet, Switch, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
+import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
 import { fonts, useTheme } from '@/theme'
 import { useSession } from '@/lib/session'
 
@@ -25,8 +25,8 @@ export function Btn({ title, onPress, variant = 'primary', disabled, active, ful
     <Pressable onPress={onPress} disabled={disabled}
       style={({ pressed }) => [s.btnOuter, full && { alignSelf: 'stretch' },
         { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }] }]}>
-      <View style={[s.btn, compact && { paddingHorizontal: 6 }, { backgroundColor: bg }]}>
-        <Text numberOfLines={compact ? 1 : undefined} style={{ fontFamily: fonts.body, fontSize: 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
+      <View style={[s.btn, { backgroundColor: bg }, compact && { paddingHorizontal: 2 }]}>
+        <Text numberOfLines={1} style={{ fontFamily: fonts.body, fontSize: compact ? 17 : 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
       </View>
     </Pressable>
   )
@@ -78,16 +78,16 @@ export function BalanceChip() {
   )
 }
 
-export function FilterSwitch({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+export function Checkbox({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   const t = useTheme()
   return (
-    <View style={s.filterSwitch}>
-      <Switch value={value} onValueChange={onChange} accessibilityLabel={label}
-        accessibilityHint="Mostra solo gli annunci pubblicati da te"
-        trackColor={{ false: t.soft, true: t.green }} ios_backgroundColor={t.soft}
-        thumbColor="#fff" />
+    <Pressable onPress={() => onChange(!value)} accessibilityRole="checkbox" accessibilityState={{ checked: value }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View style={{ width: 26, height: 26, borderWidth: 3, borderColor: t.line, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+        {value && <Text style={{ color: '#262626', fontSize: 20, lineHeight: 22 }}>✓</Text>}
+      </View>
       <Txt>{label}</Txt>
-    </View>
+    </Pressable>
   )
 }
 
@@ -137,7 +137,6 @@ const s = StyleSheet.create({
   card: { borderWidth: 3, padding: 12, boxShadow: '4px 4px 0px #000' },
   badge: { alignSelf: 'flex-start', borderWidth: 2, paddingHorizontal: 6 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#262626', borderWidth: 3, borderColor: '#000', paddingHorizontal: 10, paddingVertical: 4 },
-  filterSwitch: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   coin: { width: 16, height: 16, backgroundColor: '#f2b705', borderWidth: 2, borderColor: '#000' },
   select: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 3, paddingHorizontal: 8, paddingVertical: 4 },
 })

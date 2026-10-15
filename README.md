@@ -14,7 +14,8 @@ Le schermate si trovano in `src/app/`. Il client Supabase è in `src/lib/`; le o
 
 - Prezzi items, da int a float
 - Aggiungi icone per gli items
+- Aggiungi icone per gli utenti (raccogli skin)
 - Decidi se tenere la visualizzazione in griglia o riga
 - Andamento prezzi singoli items
-- Area riservata a banca, news, statistiche (landing page?)
+- [OK] Area riservata a banca, news, statistiche (landing page?)
 - Messaggi buffi in schermata di login

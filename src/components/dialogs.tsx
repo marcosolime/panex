@@ -38,20 +38,19 @@ type Picked = { id: string; name: string }
 function ItemPicker({ value, onChange }: { value: Picked | null; onChange: (i: Picked | null) => void }) {
   const t = useTheme()
   const [text, setText] = useState('')
-  const [results, setResults] = useState<Picked[]>([])
+  const [search, setSearch] = useState<{ needle: string; results: Picked[] } | null>(null)
+  const needle = text.trim()
+  const results = !value && search?.needle === needle ? search.results : []
 
   useEffect(() => {
-    const needle = text.trim()
-    if (!needle || value) {
-      setResults([])
-      return
-    }
+    if (!needle || value) return
+    let cancelled = false
     const handle = setTimeout(async () => {
       const { data } = await supabase.from('items').select('id, name').ilike('name', `%${needle}%`).order('name').limit(8)
-      setResults(data ?? [])
+      if (!cancelled) setSearch({ needle, results: data ?? [] })
     }, 250)
-    return () => clearTimeout(handle)
-  }, [text, value])
+    return () => { cancelled = true; clearTimeout(handle) }
+  }, [needle, value])
 
   if (value) {
     return (

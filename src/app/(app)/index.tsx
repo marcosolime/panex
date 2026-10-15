@@ -1,5 +1,129 @@
-import { Market } from '@/components/market'
+import { useCallback, useState } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { useFocusEffect } from 'expo-router'
+import { supabase } from '@/lib/supabase'
+import { useSession } from '@/lib/session'
+import { useToast } from '@/lib/toast'
+import { useTheme } from '@/theme'
+import { fmtDate } from '@/lib/format'
+import { Btn, Card, Grid, ItemIcon, Txt, fmt } from '@/components/ui'
+import { ConfirmDialog } from '@/components/dialogs'
+import { ArticleDialog, BcpDialog } from '@/components/home-dialogs'
 
-export default function Offerte() {
-  return <Market kind="offer" />
+type Article = { id: string; title: string; body: string; created_at: string; profiles: { username: string } | null }
+type Stats = { rate: number; reserve: number; exchanges: number; volume: number }
+
+// Home: dati della Banca Centrale Panera, statistiche di PanEx e articoli degli admin.
+export default function Home() {
+  const { username, isAdmin } = useSession()
+  const toast = useToast()
+  const t = useTheme()
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [articles, setArticles] = useState<Article[]>([])
+  const [error, setError] = useState('')
+  const [writing, setWriting] = useState(false)
+  const [editingBcp, setEditingBcp] = useState(false)
+  const [deleting, setDeleting] = useState<Article | null>(null)
+  const [delBusy, setDelBusy] = useState(false)
+  const [delErr, setDelErr] = useState('')
+
+  const load = useCallback(async () => {
+    const [settings, exch, arts] = await Promise.all([
+      supabase.from('settings').select('key, value'),
+      supabase.rpc('exchange_stats'),
+      supabase.from('articles').select('id, title, body, created_at, profiles(username)').order('created_at', { ascending: false }),
+    ])
+    const failure = settings.error ?? exch.error ?? arts.error
+    if (failure) return setError(failure.message)
+    setError('')
+    const map = Object.fromEntries((settings.data ?? []).map((r) => [r.key, r.value as number]))
+    const e = (exch.data ?? {}) as { orders?: number; volume?: number }
+    setStats({ rate: map.bcp_rate ?? 0, reserve: map.total_reserve ?? 0, exchanges: e.orders ?? 0, volume: e.volume ?? 0 })
+    setArticles((arts.data ?? []) as unknown as Article[])
+  }, [])
+
+  useFocusEffect(useCallback(() => { load() }, [load]))
+
+  async function removeArticle() {
+    if (!deleting) return
+    setDelBusy(true)
+    setDelErr('')
+    const { error } = await supabase.rpc('delete_article', { p_article_id: deleting.id })
+    setDelBusy(false)
+    if (error) return setDelErr(error.message)
+    setDeleting(null)
+    toast('Articolo eliminato.')
+    load()
+  }
+
+  const cards = stats && [
+    { key: 'rate', node: (
+      <Card>
+        <Txt variant="muted">Tasso di cambio BCP</Txt>
+        <View style={[s.row, { marginTop: 6 }]}>
+          <ItemIcon name="Diamond" size={32} />
+          <Txt variant="price" style={{ fontSize: 28, lineHeight: 32, flex: 1 }}>1 Diamante = {fmt(stats.rate)} Tosi</Txt>
+        </View>
+      </Card>
+    ) },
+    { key: 'reserve', node: (
+      <Card>
+        <Txt variant="muted">Riserva totale</Txt>
+        <Txt style={{ fontSize: 34, lineHeight: 40 }}>{fmt(stats.reserve)}</Txt>
+        <Txt variant="muted">diamanti</Txt>
+      </Card>
+    ) },
+    { key: 'exchanges', node: (
+      <Card>
+        <Txt variant="muted">Scambi totali</Txt>
+        <Txt style={{ fontSize: 34, lineHeight: 40 }}>{fmt(stats.exchanges)}</Txt>
+        <Txt variant="muted">{fmt(stats.volume)} Tosi scambiati</Txt>
+      </Card>
+    ) },
+  ]
+
+  return (
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 14, gap: 14 }}>
+        <Txt variant="muted">Benvenuto{username ? `, ${username}` : ''}. Qui trovi i dati della Banca Centrale Panera e le novità.</Txt>
+        {!!error && <Txt variant="error">{error}</Txt>}
+        {cards && <Grid data={cards} keyOf={(c) => c.key} render={(c) => c.node} />}
+        {isAdmin && stats && (
+          <View style={s.row}><Btn title="Modifica dati BCP" variant="alt" onPress={() => setEditingBcp(true)} /></View>
+        )}
+
+        <View style={[s.row, { justifyContent: 'space-between', marginTop: 8 }]}>
+          <Txt variant="title">Articoli</Txt>
+          {isAdmin && <Btn title="+ Nuovo articolo" onPress={() => setWriting(true)} />}
+        </View>
+        {articles.length === 0 && <Txt variant="muted">Nessun articolo pubblicato.</Txt>}
+        {articles.map((a) => (
+          <Card key={a.id} style={{ gap: 6 }}>
+            <Txt variant="title" style={{ fontSize: 14, lineHeight: 22 }}>{a.title}</Txt>
+            <Txt variant="muted">di {a.profiles?.username ?? '?'} · {fmtDate(a.created_at)}</Txt>
+            <Txt style={{ marginTop: 4 }}>{a.body}</Txt>
+            {isAdmin && (
+              <View style={[s.row, { marginTop: 6 }]}>
+                <Btn title="Elimina" variant="danger" onPress={() => { setDelErr(''); setDeleting(a) }} />
+              </View>
+            )}
+          </Card>
+        ))}
+      </ScrollView>
+
+      {writing && <ArticleDialog onClose={() => setWriting(false)} onDone={(m) => { setWriting(false); toast(m); load() }} />}
+      {editingBcp && stats && (
+        <BcpDialog rate={stats.rate} reserve={stats.reserve} onClose={() => setEditingBcp(false)}
+          onDone={(m) => { setEditingBcp(false); toast(m); load() }} />
+      )}
+      {deleting && (
+        <ConfirmDialog title="Eliminare l'articolo?" danger confirmLabel="Elimina" busy={delBusy} error={delErr}
+          text={`"${deleting.title}" sparirà per tutti gli utenti.`} onConfirm={removeArticle} onClose={() => setDeleting(null)} />
+      )}
+    </View>
+  )
 }
+
+const s = StyleSheet.create({
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+})
