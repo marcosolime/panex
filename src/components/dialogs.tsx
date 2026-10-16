@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native'
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { fonts, useTheme } from '@/theme'
 import { Btn, Card, ItemIcon, Txt, fmt } from '@/components/ui'
@@ -39,16 +39,17 @@ type Picked = { id: string; name: string }
 function ItemPicker({ value, onChange }: { value: Picked | null; onChange: (i: Picked | null) => void }) {
   const t = useTheme()
   const [text, setText] = useState('')
-  const [search, setSearch] = useState<{ needle: string; results: Picked[] } | null>(null)
+  const [search, setSearch] = useState<{ needle: string; results: Picked[]; failed: boolean } | null>(null)
   const needle = text.trim()
-  const results = !value && search?.needle === needle ? search.results : []
+  const currentSearch = !value && search?.needle === needle ? search : null
+  const results = currentSearch?.results ?? []
 
   useEffect(() => {
     if (!needle || value) return
     let cancelled = false
     const handle = setTimeout(async () => {
-      const { data } = await supabase.from('items').select('id, name').ilike('name', `%${needle}%`).order('name').limit(8)
-      if (!cancelled) setSearch({ needle, results: data ?? [] })
+      const { data, error } = await supabase.rpc('search_items', { p_query: needle, p_limit: 30 })
+      if (!cancelled) setSearch({ needle, results: data ?? [], failed: !!error })
     }, 250)
     return () => { cancelled = true; clearTimeout(handle) }
   }, [needle, value])
@@ -66,13 +67,18 @@ function ItemPicker({ value, onChange }: { value: Picked | null; onChange: (i: P
     <View style={{ gap: 6 }}>
       <TextInput value={text} onChangeText={setText} placeholder="Cerca un item (es. Obsidian)" placeholderTextColor={t.muted}
         autoCapitalize="none" style={[s.input, { borderColor: t.line, backgroundColor: t.panel, color: t.ink }]} />
-      {results.map((r) => (
-        <Pressable key={r.id} onPress={() => onChange(r)} style={[s.row, { borderBottomWidth: 2, borderColor: t.soft, paddingVertical: 4 }]}>
-          <ItemIcon id={r.id} size={28} />
-          <Txt>{r.name}</Txt>
-        </Pressable>
-      ))}
-      {!!text.trim() && results.length === 0 && <Txt variant="muted">Nessun item trovato.</Txt>}
+      {results.length > 0 && (
+        <ScrollView style={{ maxHeight: 240 }} nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {results.map((r) => (
+            <Pressable key={r.id} onPress={() => onChange(r)} style={[s.row, { borderBottomWidth: 2, borderColor: t.soft, paddingVertical: 4 }]}>
+              <ItemIcon id={r.id} size={28} />
+              <Txt>{r.name}</Txt>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+      {currentSearch?.failed && <Txt variant="error">Ricerca non disponibile. Riprova.</Txt>}
+      {currentSearch && !currentSearch.failed && results.length === 0 && <Txt variant="muted">Nessun item trovato.</Txt>}
     </View>
   )
 }
