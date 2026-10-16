@@ -1,43 +1,51 @@
 import { useState } from 'react'
-import { StyleSheet, TextInput, View } from 'react-native'
+import { Platform, StyleSheet, TextInput, View, type TextStyle } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { fonts, useTheme } from '@/theme'
 import { Btn, Txt } from '@/components/ui'
 import { Dialog } from '@/components/dialogs'
 import { compareMoney, exceedsTosiLimit, fmt, money, parseTosi } from '@/lib/format'
 
-// Nuovo articolo (solo admin): titolo e testo.
-export function ArticleDialog({ onClose, onDone }: { onClose: () => void; onDone: (message: string) => void }) {
+export type EditableArticle = { id: string; title: string; body: string }
+
+// Crea o modifica un articolo (solo admin).
+export function ArticleDialog({ article, onClose, onDone }: {
+  article?: EditableArticle; onClose: () => void; onDone: (message: string) => void
+}) {
   const t = useTheme()
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
+  const [title, setTitle] = useState(article?.title ?? '')
+  const [body, setBody] = useState(article?.body ?? '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const input = [s.input, { borderColor: t.line, backgroundColor: t.panel, color: t.ink }]
+  const hiddenTextScrollbar = Platform.OS === 'web' ? ({ scrollbarWidth: 'none' } as TextStyle) : undefined
+  const unchanged = !!article && title.trim() === article.title && body.trim() === article.body
 
-  async function publish() {
+  async function save() {
     if (!title.trim()) return setErr('Scrivi un titolo.')
     if (!body.trim()) return setErr('Scrivi il testo dell\'articolo.')
     setBusy(true)
     setErr('')
-    const { error } = await supabase.rpc('create_article', { p_title: title, p_body: body })
+    const { error } = article
+      ? await supabase.rpc('update_article', { p_article_id: article.id, p_title: title.trim(), p_body: body.trim() })
+      : await supabase.rpc('create_article', { p_title: title.trim(), p_body: body.trim() })
     setBusy(false)
     if (error) return setErr(error.message)
-    onDone('Articolo pubblicato.')
+    onDone(article ? 'Articolo aggiornato.' : 'Articolo pubblicato.')
   }
 
   return (
-    <Dialog onClose={onClose}>
-      <Txt variant="title">Nuovo articolo</Txt>
+    <Dialog onClose={onClose} scrollable>
+      <Txt variant="title">{article ? 'Modifica articolo' : 'Nuovo articolo'}</Txt>
       <Txt variant="muted">Titolo</Txt>
       <TextInput value={title} onChangeText={setTitle} maxLength={120} placeholder="Titolo" placeholderTextColor={t.muted} style={input} />
       <Txt variant="muted">Testo</Txt>
       <TextInput value={body} onChangeText={setBody} maxLength={5000} multiline numberOfLines={8} textAlignVertical="top"
-        placeholder="Scrivi qui l'articolo..." placeholderTextColor={t.muted} style={[input, { minHeight: 180 }]} />
+        placeholder="Scrivi qui l'articolo..." placeholderTextColor={t.muted} style={[input, { minHeight: 180 }, hiddenTextScrollbar]} />
       {!!err && <Txt variant="error">{err}</Txt>}
       <View style={s.row}>
         <Btn title="Annulla" variant="alt" onPress={onClose} />
-        <Btn title="Pubblica" onPress={publish} disabled={busy} />
+        <Btn title={article ? 'Salva modifiche' : 'Pubblica'} onPress={save} disabled={busy || unchanged} />
       </View>
     </Dialog>
   )

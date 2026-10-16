@@ -5,11 +5,15 @@ import { fonts, useTheme } from '@/theme'
 import { Btn, Card, ItemIcon, Txt, fmt } from '@/components/ui'
 import { compareMoney, exceedsTosiLimit, money, parseTosi } from '@/lib/format'
 
-export function Dialog({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+export function Dialog({ children, onClose, scrollable = false }: { children: ReactNode; onClose: () => void; scrollable?: boolean }) {
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
       <View style={s.backdrop}>
-        <Card style={{ width: '100%', maxWidth: 420, gap: 8 }}>{children}</Card>
+        <Card style={{ width: '100%', maxWidth: 420, maxHeight: scrollable ? '90%' : undefined, gap: 8 }}>
+          {scrollable
+            ? <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{children}</ScrollView>
+            : children}
+        </Card>
       </View>
     </Modal>
   )

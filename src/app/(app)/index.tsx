@@ -11,7 +11,7 @@ import { Btn, Card, Grid, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog } from '@/components/dialogs'
 import { ArticleDialog, BcpDialog } from '@/components/home-dialogs'
 
-type Article = { id: string; title: string; body: string; created_at: string; profiles: { username: string } | null }
+type Article = { id: string; title: string; body: string; created_at: string; updated_at: string | null; profiles: { username: string } | null }
 type Stats = { rate: string; reserve: number; exchanges: number; volume: string }
 
 // Home: dati della Banca Centrale Panera, statistiche di PanEx e articoli degli admin.
@@ -23,6 +23,7 @@ export default function Home() {
   const [articles, setArticles] = useState<Article[]>([])
   const [error, setError] = useState('')
   const [writing, setWriting] = useState(false)
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null)
   const [editingBcp, setEditingBcp] = useState(false)
   const [deleting, setDeleting] = useState<Article | null>(null)
   const [delBusy, setDelBusy] = useState(false)
@@ -32,7 +33,7 @@ export default function Home() {
     const [settings, exch, arts] = await Promise.all([
       supabase.from('settings').select('key, value::text'),
       supabase.rpc('exchange_stats'),
-      supabase.from('articles').select('id, title, body, created_at, profiles(username)').order('created_at', { ascending: false }),
+      supabase.from('articles').select('id, title, body, created_at, updated_at, profiles:profiles!articles_author_id_fkey(username)').order('created_at', { ascending: false }),
     ])
     const failure = settings.error ?? exch.error ?? arts.error
     if (failure) return setError(failure.message)
@@ -104,10 +105,12 @@ export default function Home() {
               <Image source={require('../../../assets/images/enchanted_book.png')} style={s.itemIcon} contentFit="contain" />
               <Txt variant="title" style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 22 }}>{a.title}</Txt>
             </View>
+            {a.updated_at && <Txt variant="muted">modificato il {fmtDate(a.updated_at)}</Txt>}
             <Txt variant="muted">di {a.profiles?.username ?? '?'} · {fmtDate(a.created_at)}</Txt>
             <Txt style={{ marginTop: 4 }}>{a.body}</Txt>
             {isAdmin && (
               <View style={[s.row, { marginTop: 6 }]}>
+                <Btn title="Modifica" variant="alt" onPress={() => setEditingArticle(a)} />
                 <Btn title="Elimina" variant="danger" onPress={() => { setDelErr(''); setDeleting(a) }} />
               </View>
             )}
@@ -116,6 +119,8 @@ export default function Home() {
       </ScrollView>
 
       {writing && <ArticleDialog onClose={() => setWriting(false)} onDone={(m) => { setWriting(false); toast(m); load() }} />}
+      {editingArticle && <ArticleDialog key={editingArticle.id} article={editingArticle} onClose={() => setEditingArticle(null)}
+        onDone={(m) => { setEditingArticle(null); toast(m); load() }} />}
       {editingBcp && stats && (
         <BcpDialog rate={stats.rate} reserve={stats.reserve} onClose={() => setEditingBcp(false)}
           onDone={(m) => { setEditingBcp(false); toast(m); load() }} />
