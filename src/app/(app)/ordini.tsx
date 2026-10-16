@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { useFocusEffect } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 import { useTheme } from '@/theme'
 import { fmtDate, money } from '@/lib/format'
-import { Badge, Btn, Card, Grid, ItemIcon, Txt, fmt } from '@/components/ui'
+import { Badge, Btn, Card, ItemIcon, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog } from '@/components/dialogs'
 
 type Order = {
@@ -23,6 +23,8 @@ export default function Ordini() {
   const { session, refreshBalance } = useSession()
   const toast = useToast()
   const t = useTheme()
+  const { width } = useWindowDimensions()
+  const wide = width >= 700
   const me = session?.user.id
   const [orders, setOrders] = useState<Order[]>([])
   const [error, setError] = useState('')
@@ -76,39 +78,43 @@ export default function Ordini() {
     const buyer = o.buyer_id === me
     const name = o.items?.name ?? o.item_id
     return (
-      <Card>
-        <View style={s.row}>
-          <ItemIcon name={name} />
-          <View style={{ flex: 1 }}>
-            <Txt variant="title">{o.quantity} × {name}</Txt>
-            <Txt variant="muted">{buyer ? `Acquisto da ${o.seller?.username}` : `Vendita a ${o.buyer?.username}`} · {fmtDate(o.created_at)}</Txt>
+      <Card style={[s.order, wide && s.orderWide]}>
+        <View style={s.orderDetails}>
+          <View style={s.row}>
+            <ItemIcon name={name} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Txt variant="title">{o.quantity} × {name}</Txt>
+              <Txt variant="muted">{buyer ? `Acquisto da ${o.seller?.username}` : `Vendita a ${o.buyer?.username}`} · {fmtDate(o.created_at)}</Txt>
+            </View>
           </View>
+          <Txt variant="price" style={{ marginTop: 8 }}>{fmt(money(o.unit_price, o.quantity))} Tosi</Txt>
+          {o.status === 'pending' && (
+            <Txt style={{ marginTop: 4 }}>
+              {buyer ? `Aspetta la consegna da ${o.seller?.username} in gioco, poi premi Ricevuto.`
+                : `Consegna ${o.quantity} ${name} a ${o.buyer?.username} in gioco.`}
+            </Txt>
+          )}
+          <View style={{ marginTop: 8 }}><Badge text={STATUS[o.status]} tone={TONE[o.status]} /></View>
         </View>
-        <Txt variant="price" style={{ marginTop: 8 }}>{fmt(money(o.unit_price, o.quantity))} Tosi</Txt>
         {o.status === 'pending' && (
-          <Txt style={{ marginTop: 4 }}>
-            {buyer ? `Aspetta la consegna da ${o.seller?.username} in gioco, poi premi Ricevuto.`
-              : `Consegna ${o.quantity} ${name} a ${o.buyer?.username} in gioco.`}
-          </Txt>
+          <View style={[s.orderActions, wide && s.orderActionsWide]}>
+            {buyer && <View style={wide ? s.actionButtonWide : s.actionButton}><Btn title="Ricevuto" full onPress={() => { setErr(''); setAction({ order: o, type: 'confirm' }) }} /></View>}
+            <View style={wide ? s.actionButtonWide : s.actionButton}><Btn title="Annulla" variant="danger" full onPress={() => { setErr(''); setAction({ order: o, type: 'cancel' }) }} /></View>
+          </View>
         )}
-        <View style={[s.row, { marginTop: 10 }]}>
-          <Badge text={STATUS[o.status]} tone={TONE[o.status]} />
-          {o.status === 'pending' && buyer && <Btn title="Ricevuto" onPress={() => { setErr(''); setAction({ order: o, type: 'confirm' }) }} />}
-          {o.status === 'pending' && <Btn title="Annulla" variant="danger" onPress={() => { setErr(''); setAction({ order: o, type: 'cancel' }) }} />}
-        </View>
       </Card>
     )
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 14, gap: 14 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 14, gap: 14 }}>
         <Txt variant="muted">I Tosi restano bloccati finché il compratore non preme Ricevuto, dopo lo scambio in gioco.</Txt>
         {!!error && <Txt variant="error">{error}</Txt>}
         <Txt variant="title">Da fare</Txt>
-        {todo.length === 0 ? <Txt>Niente da fare per ora.</Txt> : <Grid data={todo} keyOf={(o) => o.id} render={card} />}
+        {todo.length === 0 ? <Txt>Niente da fare per ora.</Txt> : <View style={s.list}>{todo.map((o) => <View key={o.id}>{card(o)}</View>)}</View>}
         <Txt variant="title" style={{ marginTop: 8 }}>Conclusi</Txt>
-        {done.length === 0 ? <Txt>Nessun ordine concluso.</Txt> : <Grid data={done} keyOf={(o) => o.id} render={card} />}
+        {done.length === 0 ? <Txt>Nessun ordine concluso.</Txt> : <View style={s.list}>{done.map((o) => <View key={o.id}>{card(o)}</View>)}</View>}
       </ScrollView>
       {action && (
         <ConfirmDialog
@@ -122,4 +128,12 @@ export default function Ordini() {
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  list: { gap: 16 },
+  order: { gap: 12 },
+  orderWide: { flexDirection: 'row', alignItems: 'center' },
+  orderDetails: { flex: 1, minWidth: 0 },
+  orderActions: { flexDirection: 'row', gap: 8 },
+  orderActionsWide: { width: 140, flexDirection: 'column' },
+  actionButton: { flex: 1 },
+  actionButtonWide: { width: '100%' },
 })

@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native'
 import { useFocusEffect } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 import { fonts, useTheme } from '@/theme'
-import { Badge, Btn, Card, Checkbox, Grid, ItemIcon, Select, Txt, fmt } from '@/components/ui'
+import { Badge, Btn, Card, Checkbox, ItemIcon, Select, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog, Dialog, ListingDialog } from '@/components/dialogs'
 import { compareMoney, money, subtractMoney } from '@/lib/format'
 
@@ -27,6 +27,8 @@ export function Market({ kind }: { kind: Kind }) {
   const { session } = useSession()
   const toast = useToast()
   const t = useTheme()
+  const { width } = useWindowDimensions()
+  const wide = width >= 700
   const me = session?.user.id
   const isReq = kind === 'request'
   const [rows, setRows] = useState<Row[]>([])
@@ -82,34 +84,36 @@ export function Market({ kind }: { kind: Kind }) {
   function card(r: Row) {
     const name = r.items?.name ?? r.item_id
     return (
-      <Card>
-        <View style={s.row}>
-          <ItemIcon name={name} />
-          <View style={{ flex: 1 }}>
-            <Txt variant="title">{name}</Txt>
-            <Txt variant="muted">{fmt(r.quantity)} {isReq ? 'richiesti' : 'disponibili'}</Txt>
-          </View>
-        </View>
-        <Txt variant="price" style={{ marginTop: 8 }}>{fmt(r.unit_price)} Tosi / unità</Txt>
-        {!!r.note && <Txt variant="muted">Note: {r.note}</Txt>}
-        <Txt variant="muted">{isReq ? 'richiesta di ' : 'di '}{r.profiles?.username ?? '?'} · {new Date(r.created_at).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</Txt>
-        {r.owner_id === me ? (
-          <View style={s.ownerActions}>
-            <Badge text={isReq ? 'Tua richiesta' : 'Tua offerta'} />
-            <View style={s.actionButtons}>
-              <View style={s.actionButton}>
-                <Btn title="Modifica" variant="alt" full compact onPress={() => setEditing(r)} />
-              </View>
-              <View style={s.actionButton}>
-                <Btn title="Ritira" variant="danger" full compact onPress={() => { setWdErr(''); setWithdrawing(r) }} />
-              </View>
+      <Card style={[s.listing, wide && s.listingWide]}>
+        <View style={s.listingDetails}>
+          <View style={s.row}>
+            <ItemIcon name={name} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Txt variant="title">{name}</Txt>
+              <Txt variant="muted">{fmt(r.quantity)} {isReq ? 'richiesti' : 'disponibili'}</Txt>
             </View>
           </View>
-        ) : (
-          <View style={{ marginTop: 10, alignSelf: 'flex-start' }}>
-            <Btn title={isReq ? 'Vendi' : 'Compra'} onPress={() => setSelected(r)} />
-          </View>
-        )}
+          <Txt variant="price" style={{ marginTop: 8 }}>{fmt(r.unit_price)} Tosi / unità</Txt>
+          {!!r.note && <Txt variant="muted">Note: {r.note}</Txt>}
+          <Txt variant="muted">{isReq ? 'richiesta di ' : 'di '}{r.profiles?.username ?? '?'} · {new Date(r.created_at).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</Txt>
+          {r.owner_id === me && <View style={{ marginTop: 8 }}><Badge text={isReq ? 'Tua richiesta' : 'Tua offerta'} /></View>}
+        </View>
+        <View style={[s.listingActions, wide && s.listingActionsWide]}>
+          {r.owner_id === me ? (
+            <>
+              <View style={wide ? s.actionButtonWide : s.actionButton}>
+                <Btn title="Modifica" variant="alt" full onPress={() => setEditing(r)} />
+              </View>
+              <View style={wide ? s.actionButtonWide : s.actionButton}>
+                <Btn title="Ritira" variant="danger" full onPress={() => { setWdErr(''); setWithdrawing(r) }} />
+              </View>
+            </>
+          ) : (
+            <View style={wide ? s.actionButtonWide : s.actionButton}>
+              <Btn title={isReq ? 'Vendi' : 'Compra'} full onPress={() => setSelected(r)} />
+            </View>
+          )}
+        </View>
       </Card>
     )
   }
@@ -132,7 +136,7 @@ export function Market({ kind }: { kind: Kind }) {
         {!!error && <Txt variant="error">{error}</Txt>}
         {visible.length === 0
           ? <Txt variant="muted">Nessun annuncio trovato.</Txt>
-          : <Grid data={visible} keyOf={(r) => r.id} render={card} />}
+          : <View style={s.list}>{visible.map((r) => <View key={r.id}>{card(r)}</View>)}</View>}
       </ScrollView>
       {selected && (
         <OrderDialog row={selected} isReq={isReq} onClose={() => setSelected(null)}
@@ -212,7 +216,12 @@ function OrderDialog({ row, isReq, onClose, onDone }: {
 const s = StyleSheet.create({
   input: { borderWidth: 3, paddingHorizontal: 8, paddingVertical: 4, fontFamily: fonts.body, fontSize: 22 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-  ownerActions: { marginTop: 10, gap: 8 },
-  actionButtons: { flexDirection: 'row', gap: 8 },
+  list: { gap: 16 },
+  listing: { gap: 12 },
+  listingWide: { flexDirection: 'row', alignItems: 'center' },
+  listingDetails: { flex: 1, minWidth: 0 },
+  listingActions: { flexDirection: 'row', gap: 8 },
+  listingActionsWide: { width: 140, flexDirection: 'column' },
   actionButton: { flex: 1 },
+  actionButtonWide: { width: '100%' },
 })
