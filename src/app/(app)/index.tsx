@@ -99,7 +99,10 @@ export default function Home() {
         {articles.length === 0 && <Txt variant="muted">Nessun articolo pubblicato.</Txt>}
         {articles.map((a) => (
           <Card key={a.id} style={{ gap: 6 }}>
-            <Txt variant="title" style={{ fontSize: 14, lineHeight: 22 }}>{a.title}</Txt>
+            <View style={s.row}>
+              <ItemIcon id="enchanted_book" size={32} />
+              <Txt variant="title" style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 22 }}>{a.title}</Txt>
+            </View>
             <Txt variant="muted">di {a.profiles?.username ?? '?'} · {fmtDate(a.created_at)}</Txt>
             <Txt style={{ marginTop: 4 }}>{a.body}</Txt>
             {isAdmin && (
