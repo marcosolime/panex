@@ -20,6 +20,8 @@ Prezzi e importi usano `numeric(20,5)` nel database (vedi `database/panex_decima
 - asset icone title
 - articoli: tasto 'modifica'
 - categorie?
+- utenti online
+- !!! ricerca item, barra di scorrimento
 
 - Messaggi buffi in schermata di login
     const LOGIN_QUOTES = [

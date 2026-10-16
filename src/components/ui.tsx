@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Image } from 'expo-image'
-import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
+import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
 import { fonts, useTheme } from '@/theme'
 import { useSession } from '@/lib/session'
 import { fmtBalance } from '@/lib/format'
@@ -93,19 +93,35 @@ export function Select<T extends string>({ value, options, onChange }: {
   value: T; options: { value: T; label: string }[]; onChange: (v: T) => void
 }) {
   const t = useTheme()
-  const [open, setOpen] = useState(false)
+  const anchorRef = useRef<View>(null)
+  const [anchor, setAnchor] = useState<{ x: number; top: number; width: number } | null>(null)
   const box = [s.select, { borderColor: t.line, backgroundColor: t.panel }]
+
+  function toggle() {
+    if (anchor) return setAnchor(null)
+    anchorRef.current?.measureInWindow((x, y, width, height) => setAnchor({ x, top: y + height, width }))
+  }
+
   return (
-    <View style={{ minWidth: 200 }}>
-      <Pressable onPress={() => setOpen(!open)} style={box}>
+    <View ref={anchorRef} collapsable={false} style={{ minWidth: 200 }}>
+      <Pressable onPress={toggle} style={box}>
         <Txt>{options.find((o) => o.value === value)?.label}</Txt>
-        <Txt>{open ? '⌃' : '⌄'}</Txt>
+        <Txt>{anchor ? '⌃' : '⌄'}</Txt>
       </Pressable>
-      {open && options.map((o) => (
-        <Pressable key={o.value} onPress={() => { onChange(o.value); setOpen(false) }} style={[box, { borderTopWidth: 0 }]}>
-          <Txt>{o.label}</Txt>
-        </Pressable>
-      ))}
+      {anchor && (
+        <Modal transparent statusBarTranslucent animationType="none" onRequestClose={() => setAnchor(null)}>
+          <View style={{ flex: 1 }}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => setAnchor(null)} />
+            <View style={[s.selectMenu, { left: anchor.x, top: anchor.top, width: anchor.width }]}>
+              {options.map((o) => (
+                <Pressable key={o.value} onPress={() => { onChange(o.value); setAnchor(null) }} style={[box, { borderTopWidth: 0 }]}>
+                  <Txt>{o.label}</Txt>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   )
 }
@@ -136,4 +152,5 @@ const s = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#262626', borderWidth: 3, borderColor: '#000', paddingHorizontal: 10, paddingVertical: 4 },
   coin: { width: 16, height: 16, backgroundColor: '#f2b705', borderWidth: 2, borderColor: '#000' },
   select: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 3, paddingHorizontal: 8, paddingVertical: 4 },
+  selectMenu: { position: 'absolute', elevation: 8 },
 })

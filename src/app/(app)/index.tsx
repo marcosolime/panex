@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
+import { Image } from 'expo-image'
 import { useFocusEffect } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 import { useTheme } from '@/theme'
 import { fmtDate, money } from '@/lib/format'
-import { Btn, Card, Grid, ItemIcon, Txt, fmt } from '@/components/ui'
+import { Btn, Card, Grid, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog } from '@/components/dialogs'
 import { ArticleDialog, BcpDialog } from '@/components/home-dialogs'
 
@@ -60,16 +61,16 @@ export default function Home() {
     { key: 'rate', node: (
       <Card>
         <Txt variant="muted">Tasso di cambio BCP</Txt>
-        <View style={[s.row, { marginTop: 6 }]}>
-          <ItemIcon id="diamond" size={32} />
-          <Txt variant="price" style={{ fontSize: 28, lineHeight: 32, flex: 1 }}>1 Diamante = {fmt(stats.rate)} Tosi</Txt>
-        </View>
+        <Txt variant="price" style={{ marginTop: 6, fontSize: 28, lineHeight: 32 }}>1 Diamante = {fmt(stats.rate)} Tosi</Txt>
       </Card>
     ) },
     { key: 'reserve', node: (
       <Card>
         <Txt variant="muted">Riserva totale</Txt>
-        <Txt style={{ fontSize: 34, lineHeight: 40 }}>{fmt(stats.reserve)}</Txt>
+        <View style={s.row}>
+          <Txt style={{ fontSize: 34, lineHeight: 40 }}>{fmt(stats.reserve)}</Txt>
+          <Image source={require('../../../assets/images/diamond.png')} style={s.itemIcon} contentFit="contain" />
+        </View>
         <Txt variant="muted">diamanti</Txt>
       </Card>
     ) },
@@ -100,7 +101,7 @@ export default function Home() {
         {articles.map((a) => (
           <Card key={a.id} style={{ gap: 6 }}>
             <View style={s.row}>
-              <ItemIcon id="enchanted_book" size={32} />
+              <Image source={require('../../../assets/images/enchanted_book.png')} style={s.itemIcon} contentFit="contain" />
               <Txt variant="title" style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 22 }}>{a.title}</Txt>
             </View>
             <Txt variant="muted">di {a.profiles?.username ?? '?'} · {fmtDate(a.created_at)}</Txt>
@@ -129,4 +130,5 @@ export default function Home() {
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  itemIcon: { width: 32, height: 32 },
 })
