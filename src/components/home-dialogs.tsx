@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { fonts, useTheme } from '@/theme'
 import { Btn, Txt } from '@/components/ui'
 import { Dialog } from '@/components/dialogs'
+import { compareMoney, exceedsTosiLimit, fmt, money, parseTosi } from '@/lib/format'
 
 // Nuovo articolo (solo admin): titolo e testo.
 export function ArticleDialog({ onClose, onDone }: { onClose: () => void; onDone: (message: string) => void }) {
@@ -44,23 +45,25 @@ export function ArticleDialog({ onClose, onDone }: { onClose: () => void; onDone
 
 // Modifica dei dati della Banca Centrale Panera (solo admin).
 export function BcpDialog({ rate, reserve, onClose, onDone }: {
-  rate: number; reserve: number; onClose: () => void; onDone: (message: string) => void
+  rate: string; reserve: number; onClose: () => void; onDone: (message: string) => void
 }) {
   const t = useTheme()
-  const [r, setR] = useState(String(rate))
+  const [r, setR] = useState(money(rate))
   const [v, setV] = useState(String(reserve))
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const input = [s.input, { borderColor: t.line, backgroundColor: t.panel, color: t.ink }]
+  const parsedRate = parseTosi(r)
 
   async function save() {
-    const rateN = Number(r)
     const reserveN = Number(v)
-    if (!Number.isInteger(rateN) || rateN < 1) return setErr('Il tasso deve essere un numero intero di almeno 1.')
+    if (!parsedRate) return setErr('Inserisci un tasso valido, usando virgola o punto per i decimali.')
+    if (compareMoney(parsedRate.value, '0.00001') < 0) return setErr('Il tasso minimo dopo il troncamento è 0,00001.')
+    if (exceedsTosiLimit(r, 100000000n)) return setErr('Il tasso massimo è 100.000.000.')
     if (!Number.isInteger(reserveN) || reserveN < 0) return setErr('La riserva deve essere un numero intero, zero o più.')
     setBusy(true)
     setErr('')
-    const { error } = await supabase.rpc('update_bcp', { p_rate: rateN, p_reserve: reserveN })
+    const { error } = await supabase.rpc('update_bcp', { p_rate: parsedRate.value, p_reserve: reserveN })
     setBusy(false)
     if (error) return setErr(error.message)
     onDone('Dati BCP aggiornati.')
@@ -70,7 +73,8 @@ export function BcpDialog({ rate, reserve, onClose, onDone }: {
     <Dialog onClose={onClose}>
       <Txt variant="title">Dati BCP</Txt>
       <Txt variant="muted">Tosi per 1 diamante</Txt>
-      <TextInput value={r} onChangeText={setR} keyboardType="number-pad" style={input} />
+      <TextInput value={r} onChangeText={setR} keyboardType="decimal-pad" style={input} />
+      {parsedRate?.truncated && <Txt variant="muted">Verrà salvato come {fmt(parsedRate.value)} Tosi.</Txt>}
       <Txt variant="muted">Riserva totale (diamanti)</Txt>
       <TextInput value={v} onChangeText={setV} keyboardType="number-pad" style={input} />
       {!!err && <Txt variant="error">{err}</Txt>}

@@ -5,13 +5,13 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 import { useTheme } from '@/theme'
-import { fmtDate } from '@/lib/format'
+import { fmtDate, money } from '@/lib/format'
 import { Btn, Card, Grid, ItemIcon, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog } from '@/components/dialogs'
 import { ArticleDialog, BcpDialog } from '@/components/home-dialogs'
 
 type Article = { id: string; title: string; body: string; created_at: string; profiles: { username: string } | null }
-type Stats = { rate: number; reserve: number; exchanges: number; volume: number }
+type Stats = { rate: string; reserve: number; exchanges: number; volume: string }
 
 // Home: dati della Banca Centrale Panera, statistiche di PanEx e articoli degli admin.
 export default function Home() {
@@ -29,16 +29,16 @@ export default function Home() {
 
   const load = useCallback(async () => {
     const [settings, exch, arts] = await Promise.all([
-      supabase.from('settings').select('key, value'),
+      supabase.from('settings').select('key, value::text'),
       supabase.rpc('exchange_stats'),
       supabase.from('articles').select('id, title, body, created_at, profiles(username)').order('created_at', { ascending: false }),
     ])
     const failure = settings.error ?? exch.error ?? arts.error
     if (failure) return setError(failure.message)
     setError('')
-    const map = Object.fromEntries((settings.data ?? []).map((r) => [r.key, r.value as number]))
-    const e = (exch.data ?? {}) as { orders?: number; volume?: number }
-    setStats({ rate: map.bcp_rate ?? 0, reserve: map.total_reserve ?? 0, exchanges: e.orders ?? 0, volume: e.volume ?? 0 })
+    const map = Object.fromEntries((settings.data ?? []).map((r) => [r.key, r.value as string]))
+    const e = (exch.data ?? {}) as { orders?: number; volume?: number | string }
+    setStats({ rate: map.bcp_rate ?? '0', reserve: Number(map.total_reserve ?? 0), exchanges: e.orders ?? 0, volume: money(e.volume ?? '0') })
     setArticles((arts.data ?? []) as unknown as Article[])
   }, [])
 

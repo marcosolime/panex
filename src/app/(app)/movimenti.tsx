@@ -4,11 +4,11 @@ import { useFocusEffect } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useTheme } from '@/theme'
-import { fmtDate } from '@/lib/format'
+import { compareMoney, fmtDate, money, sumMoney } from '@/lib/format'
 import { Card, Grid, Txt, fmt } from '@/components/ui'
 
 type Entry = {
-  id: number; amount: number; kind: 'grant' | 'hold' | 'sale' | 'refund'; memo: string | null; created_at: string
+  id: number; amount: string; kind: 'grant' | 'hold' | 'sale' | 'refund'; memo: string | null; created_at: string
   orders: {
     quantity: number; items: { name: string } | null
     buyer: { username: string } | null; seller: { username: string } | null
@@ -30,14 +30,14 @@ export default function Movimenti() {
   const { session, balance, refreshBalance } = useSession()
   const t = useTheme()
   const [entries, setEntries] = useState<Entry[]>([])
-  const [blocked, setBlocked] = useState(0)
+  const [blocked, setBlocked] = useState('0')
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
     refreshBalance()
     const ledger = await supabase
       .from('ledger')
-      .select('id, amount, kind, memo, created_at, orders(quantity, items(name), buyer:profiles!buyer_id(username), seller:profiles!seller_id(username))')
+      .select('id, amount::text, kind, memo, created_at, orders(quantity, items(name), buyer:profiles!buyer_id(username), seller:profiles!seller_id(username))')
       .order('created_at', { ascending: false })
       .limit(100)
     if (ledger.error) return setError(ledger.error.message)
@@ -45,9 +45,9 @@ export default function Movimenti() {
     setEntries((ledger.data ?? []) as unknown as Entry[])
 
     // Tosi bloccati: ordini in attesa in cui sono il compratore.
-    const pending = await supabase.from('orders').select('quantity, unit_price')
+    const pending = await supabase.from('orders').select('quantity, unit_price::text')
       .eq('status', 'pending').eq('buyer_id', session?.user.id ?? '')
-    setBlocked((pending.data ?? []).reduce((sum, o) => sum + o.quantity * o.unit_price, 0))
+    setBlocked(sumMoney((pending.data ?? []).map((o) => money(o.unit_price, o.quantity))))
   }, [refreshBalance, session])
 
   useFocusEffect(useCallback(() => { load() }, [load]))
@@ -79,7 +79,7 @@ export default function Movimenti() {
                   <Txt>{title}</Txt>
                   <Txt variant="muted">{detail} · {fmtDate(e.created_at)}</Txt>
                 </View>
-                <Txt style={{ color: e.amount < 0 ? t.red : t.pos }}>{e.amount > 0 ? '+' : ''}{fmt(e.amount)}</Txt>
+                <Txt style={{ color: compareMoney(e.amount, '0') < 0 ? t.red : t.pos }}>{compareMoney(e.amount, '0') > 0 ? '+' : ''}{fmt(e.amount)}</Txt>
               </View>
             )
           })}

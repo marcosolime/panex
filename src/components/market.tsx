@@ -7,11 +7,12 @@ import { useToast } from '@/lib/toast'
 import { fonts, useTheme } from '@/theme'
 import { Badge, Btn, Card, Checkbox, Grid, ItemIcon, Select, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog, Dialog, ListingDialog } from '@/components/dialogs'
+import { compareMoney, money, subtractMoney } from '@/lib/format'
 
 type Kind = 'offer' | 'request'
 type Sort = 'new' | 'asc' | 'desc'
 type Row = {
-  id: string; owner_id: string; quantity: number; unit_price: number; note: string | null
+  id: string; owner_id: string; quantity: number; unit_price: string; note: string | null
   created_at: string; item_id: string; items: { name: string } | null; profiles: { username: string } | null
 }
 
@@ -43,7 +44,7 @@ export function Market({ kind }: { kind: Kind }) {
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from('listings')
-      .select('id, owner_id, quantity, unit_price, note, created_at, item_id, items(name), profiles(username)')
+      .select('id, owner_id, quantity, unit_price::text, note, created_at, item_id, items(name), profiles(username)')
       .eq('kind', kind)
       .eq('status', 'open')
     if (error) setError(error.message)
@@ -61,8 +62,8 @@ export function Market({ kind }: { kind: Kind }) {
       (!mine || r.owner_id === me) &&
       `${r.items?.name ?? r.item_id} ${r.profiles?.username ?? ''}`.toLowerCase().includes(needle))
     return list.sort((a, b) =>
-      sort === 'asc' ? a.unit_price - b.unit_price
-      : sort === 'desc' ? b.unit_price - a.unit_price
+      sort === 'asc' ? compareMoney(a.unit_price, b.unit_price)
+      : sort === 'desc' ? compareMoney(b.unit_price, a.unit_price)
       : b.created_at.localeCompare(a.created_at))
   }, [rows, q, sort, mine, me])
 
@@ -165,11 +166,12 @@ function OrderDialog({ row, isReq, onClose, onDone }: {
   const [err, setErr] = useState('')
   const name = row.items?.name ?? row.item_id
   const owner = row.profiles?.username ?? '?'
-  const n = parseInt(qty, 10) || 0
-  const total = n * row.unit_price
+  const n = /^\d+$/.test(qty.trim()) ? Number(qty) : 0
+  const validQty = Number.isSafeInteger(n) && n >= 1 && n <= row.quantity
+  const total = money(row.unit_price, validQty ? n : 0)
   let problem = ''
-  if (n < 1 || n > row.quantity) problem = `Scegli una quantità tra 1 e ${fmt(row.quantity)}.`
-  else if (!isReq && total > (balance ?? 0)) problem = 'Tosi insufficienti per questa quantità.'
+  if (!validQty) problem = `Scegli una quantità intera tra 1 e ${fmt(row.quantity)}.`
+  else if (!isReq && compareMoney(total, balance ?? '0') > 0) problem = 'Tosi insufficienti per questa quantità.'
 
   async function confirm() {
     setBusy(true)
@@ -196,7 +198,7 @@ function OrderDialog({ row, isReq, onClose, onDone }: {
       </View>
       <Txt variant="price">Totale: {fmt(total)} Tosi</Txt>
       <Txt variant="muted">
-        {isReq ? `Riceverai ${fmt(total)} Tosi quando ${owner} conferma.` : `Saldo dopo l'acquisto: ${fmt((balance ?? 0) - total)} Tosi`}
+        {isReq ? `Riceverai ${fmt(total)} Tosi quando ${owner} conferma.` : `Saldo dopo l'acquisto: ${fmt(subtractMoney(balance ?? '0', total))} Tosi`}
       </Txt>
       {!!(problem || err) && <Txt variant="error">{problem || err}</Txt>}
       <View style={s.row}>

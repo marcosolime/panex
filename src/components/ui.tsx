@@ -2,8 +2,9 @@ import { useState, type ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
 import { fonts, useTheme } from '@/theme'
 import { useSession } from '@/lib/session'
+import { fmtBalance } from '@/lib/format'
 
-export const fmt = (n: number) => n.toLocaleString('it-IT')
+export { fmt, fmtBalance } from '@/lib/format'
 
 type Variant = 'body' | 'muted' | 'title' | 'price' | 'error'
 
@@ -72,7 +73,7 @@ export function BalanceChip() {
     <View style={s.chip}>
       <View style={s.coin} />
       <Text style={{ fontFamily: fonts.body, fontSize: 24, color: '#fff' }}>
-        {balance === null ? '...' : fmt(balance)} Tosi
+        {balance === null ? '...' : fmtBalance(balance)} Tosi
       </Text>
     </View>
   )

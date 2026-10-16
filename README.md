@@ -9,10 +9,10 @@ App Expo/React Native per scambiare oggetti di gioco usando i Tosi. Gli utenti a
 3. Avvia l'app con `npm start`. Usa `npm run android`, `npm run ios` o `npm run web` per aprire direttamente una piattaforma.
 
 Le schermate si trovano in `src/app/`. Il client Supabase è in `src/lib/`; le operazioni su annunci e ordini richiedono le relative tabelle e funzioni nel database Supabase.
+Prezzi e importi usano `numeric(20,5)` nel database (vedi `database/panex_decimals.sql`); le quantità degli item restano intere. Il client invia prezzi e tassi come stringhe e calcola i totali in unità da 0,00001 Tosi.
 
 ## TODOs
 
-- Prezzi items, da int a float
 - Aggiungi icone per gli items
 - Aggiungi icone per gli utenti (raccogli skin)
 - Decidi se tenere la visualizzazione in griglia o riga

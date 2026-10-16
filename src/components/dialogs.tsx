@@ -2,7 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { fonts, useTheme } from '@/theme'
-import { Btn, Card, ItemIcon, Txt } from '@/components/ui'
+import { Btn, Card, ItemIcon, Txt, fmt } from '@/components/ui'
+import { compareMoney, exceedsTosiLimit, money, parseTosi } from '@/lib/format'
 
 export function Dialog({ children, onClose }: { children: ReactNode; onClose: () => void }) {
   return (
@@ -76,7 +77,7 @@ function ItemPicker({ value, onChange }: { value: Picked | null; onChange: (i: P
   )
 }
 
-export type EditableListing = { id: string; name: string; quantity: number; unit_price: number; note: string | null }
+export type EditableListing = { id: string; name: string; quantity: number; unit_price: string; note: string | null }
 
 // Crea una nuova offerta/richiesta, oppure (se c'è "listing") modifica quantità, prezzo e note.
 export function ListingDialog({ kind, listing, onClose, onDone }: {
@@ -85,28 +86,31 @@ export function ListingDialog({ kind, listing, onClose, onDone }: {
   const t = useTheme()
   const [item, setItem] = useState<Picked | null>(null)
   const [qty, setQty] = useState(listing ? String(listing.quantity) : '10')
-  const [price, setPrice] = useState(listing ? String(listing.unit_price) : '10')
+  const [price, setPrice] = useState(listing ? money(listing.unit_price) : '10')
   const [note, setNote] = useState(listing?.note ?? '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const input = [s.input, { borderColor: t.line, backgroundColor: t.panel, color: t.ink }]
+  const parsedPrice = parseTosi(price)
 
   async function save() {
     setErr('')
     const q = Number(qty)
-    const p = Number(price)
     if (!listing && !item) return setErr('Scegli un item dalla lista.')
     if (!Number.isInteger(q) || q < 1) return setErr('La quantità deve essere un numero intero di almeno 1.')
-    if (!Number.isInteger(p) || p < 1) return setErr('Il prezzo deve essere un numero intero di almeno 1 Tosi.')
+    if (q > 1000000) return setErr('La quantità massima è 1.000.000.')
+    if (!parsedPrice) return setErr('Inserisci un prezzo valido, usando virgola o punto per i decimali.')
+    if (compareMoney(parsedPrice.value, '0.00001') < 0) return setErr('Il prezzo minimo dopo il troncamento è 0,00001 Tosi.')
+    if (exceedsTosiLimit(price, 100000000n)) return setErr('Il prezzo massimo è 100.000.000 Tosi.')
     setBusy(true)
     const { error } = listing
-      ? await supabase.rpc('update_listing', { p_listing_id: listing.id, p_quantity: q, p_unit_price: p, p_note: note })
-      : await supabase.rpc('create_listing', { p_kind: kind, p_item_id: item!.id, p_quantity: q, p_unit_price: p, p_note: note })
+      ? await supabase.rpc('update_listing', { p_listing_id: listing.id, p_quantity: q, p_unit_price: parsedPrice.value, p_note: note })
+      : await supabase.rpc('create_listing', { p_kind: kind, p_item_id: item!.id, p_quantity: q, p_unit_price: parsedPrice.value, p_note: note })
     setBusy(false)
     if (error) return setErr(error.message)
     onDone(listing ? 'Annuncio aggiornato.'
-      : kind === 'offer' ? `Offerta pubblicata: ${q} ${item!.name} a ${p} Tosi l'uno.`
-      : `Richiesta pubblicata: cerchi ${q} ${item!.name} a ${p} Tosi l'uno.`)
+      : kind === 'offer' ? `Offerta pubblicata: ${q} ${item!.name} a ${fmt(parsedPrice.value)} Tosi l'uno.`
+      : `Richiesta pubblicata: cerchi ${q} ${item!.name} a ${fmt(parsedPrice.value)} Tosi l'uno.`)
   }
 
   return (
@@ -116,7 +120,8 @@ export function ListingDialog({ kind, listing, onClose, onDone }: {
       <Txt variant="muted">Quantità</Txt>
       <TextInput value={qty} onChangeText={setQty} keyboardType="number-pad" style={input} />
       <Txt variant="muted">Prezzo per unità (Tosi)</Txt>
-      <TextInput value={price} onChangeText={setPrice} keyboardType="number-pad" style={input} />
+      <TextInput value={price} onChangeText={setPrice} keyboardType="decimal-pad" style={input} />
+      {parsedPrice?.truncated && <Txt variant="muted">Verrà salvato come {fmt(parsedPrice.value)} Tosi.</Txt>}
       <Txt variant="muted">Note (facoltativo)</Txt>
       <TextInput value={note} onChangeText={setNote} maxLength={60} placeholder="es. Efficiency V" placeholderTextColor={t.muted} style={input} />
       {!listing && (

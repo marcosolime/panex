@@ -7,7 +7,7 @@ type Ctx = {
   loading: boolean
   username: string | null
   isAdmin: boolean
-  balance: number | null
+  balance: string | null
   refreshBalance: () => Promise<void>
 }
 
@@ -19,7 +19,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<{ userId: string; username: string | null; isAdmin: boolean } | null>(null)
-  const [accountBalance, setAccountBalance] = useState<{ userId: string; balance: number } | null>(null)
+  const [accountBalance, setAccountBalance] = useState<{ userId: string; balance: string } | null>(null)
   const userId = session?.user.id
   const username = profile && profile.userId === userId ? profile.username : null
   const isAdmin = profile && profile.userId === userId ? profile.isAdmin : false
@@ -37,16 +37,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // La vista balances mostra solo il saldo di chi interroga (grazie alla RLS sul registro).
   const refreshBalance = useCallback(async () => {
     if (!userId) return
-    const { data } = await supabase.from('balances').select('balance').maybeSingle()
-    setAccountBalance({ userId, balance: data?.balance ?? 0 })
+    const { data } = await supabase.from('balances').select('balance::text').maybeSingle()
+    setAccountBalance({ userId, balance: data?.balance ?? '0' })
   }, [userId])
 
   useEffect(() => {
     if (!userId) return
     let cancelled = false
-    supabase.from('balances').select('balance').maybeSingle()
+    supabase.from('balances').select('balance::text').maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setAccountBalance({ userId, balance: data?.balance ?? 0 })
+        if (!cancelled) setAccountBalance({ userId, balance: data?.balance ?? '0' })
       })
     supabase.from('profiles').select('username, is_admin').eq('id', userId).maybeSingle()
       .then(({ data }) => {
