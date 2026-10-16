@@ -22,6 +22,7 @@ Prezzi e importi usano `numeric(20,5)` nel database (vedi `database/panex_decima
 - categorie?
 - utenti online
 - !!! ricerca item, barra di scorrimento
+- su nuovo articolo, imposta data odierna o passata
 
 - Messaggi buffi in schermata di login
     const LOGIN_QUOTES = [
