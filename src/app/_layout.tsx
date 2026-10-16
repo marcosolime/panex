@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router'
+import Head from 'expo-router/head'
 import { StatusBar } from 'expo-status-bar'
 import { useFonts } from 'expo-font'
 import { VT323_400Regular } from '@expo-google-fonts/vt323'
@@ -12,6 +13,9 @@ export default function RootLayout() {
   return (
     <SessionProvider>
       <ToastProvider>
+        <Head>
+          <title>PanEx :: Panera Exchange</title>
+        </Head>
         <StatusBar style="light" />
         <Stack screenOptions={{ headerShown: false }} />
       </ToastProvider>
