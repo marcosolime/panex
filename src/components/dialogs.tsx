@@ -56,7 +56,7 @@ function ItemPicker({ value, onChange }: { value: Picked | null; onChange: (i: P
   if (value) {
     return (
       <View style={s.row}>
-        <ItemIcon name={value.name} size={32} />
+        <ItemIcon id={value.id} size={32} />
         <Txt style={{ flex: 1 }}>{value.name}</Txt>
         <Btn title="Cambia" variant="alt" onPress={() => { onChange(null); setText('') }} />
       </View>
@@ -68,7 +68,7 @@ function ItemPicker({ value, onChange }: { value: Picked | null; onChange: (i: P
         autoCapitalize="none" style={[s.input, { borderColor: t.line, backgroundColor: t.panel, color: t.ink }]} />
       {results.map((r) => (
         <Pressable key={r.id} onPress={() => onChange(r)} style={[s.row, { borderBottomWidth: 2, borderColor: t.soft, paddingVertical: 4 }]}>
-          <ItemIcon name={r.name} size={28} />
+          <ItemIcon id={r.id} size={28} />
           <Txt>{r.name}</Txt>
         </Pressable>
       ))}

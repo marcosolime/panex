@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react'
+import { Image } from 'expo-image'
 import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
 import { fonts, useTheme } from '@/theme'
 import { useSession } from '@/lib/session'
 import { fmtBalance } from '@/lib/format'
+import { supabase } from '@/lib/supabase'
 
 export { fmt, fmtBalance } from '@/lib/format'
 
@@ -48,22 +50,16 @@ export function Badge({ text, tone = 'gold' }: { text: string; tone?: 'gold' | '
   )
 }
 
-const COL: Record<string, string> = {
-  Diamond: '#3fd6d0', 'Iron Ingot': '#d0d0d0', 'Gold Ingot': '#f5c518', Bread: '#c98a3a', Obsidian: '#3a2552',
-  'Ender Pearl': '#1f8a78', 'Oak Log': '#9a7440', Emerald: '#29c25a', 'Redstone Dust': '#c4271c', Torch: '#e0702a',
-}
-const hue = (x: string) => {
-  let h = 7
-  for (const c of x) h = (h * 31 + c.charCodeAt(0)) | 0
-  return Math.abs(h) % 360
-}
-
-// Per ora un quadratino colorato; più avanti qui arriveranno le immagini degli item.
-export function ItemIcon({ name, size = 44 }: { name: string; size?: number }) {
-  const t = useTheme()
+export function ItemIcon({ id, size = 44 }: { id: string; size?: number }) {
+  const [failedId, setFailedId] = useState<string | null>(null)
+  const { data: { publicUrl } } = supabase.storage.from('item-icons').getPublicUrl(`icons/${id}.png`)
   return (
-    <View style={{ width: size, height: size, backgroundColor: COL[name] ?? `hsl(${hue(name)}, 45%, 50%)`,
-      borderWidth: 3, borderColor: t.line, borderTopColor: 'rgba(255,255,255,0.45)', borderLeftColor: 'rgba(255,255,255,0.45)' }} />
+    <View style={{ width: size, height: size, padding: 2, backgroundColor: '#373737' }}>
+      <View style={{ flex: 1, backgroundColor: '#898989', borderWidth: 2, borderColor: '#f0f0f0' }}>
+        {failedId !== id && <Image source={{ uri: publicUrl }} style={{ width: '100%', height: '100%' }}
+          contentFit="contain" cachePolicy="memory-disk" onError={() => setFailedId(id)} />}
+      </View>
+    </View>
   )
 }
 

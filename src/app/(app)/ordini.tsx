@@ -81,7 +81,7 @@ export default function Ordini() {
       <Card style={[s.order, wide && s.orderWide]}>
         <View style={s.orderDetails}>
           <View style={s.row}>
-            <ItemIcon name={name} />
+            <ItemIcon id={o.item_id} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <Txt variant="title">{o.quantity} × {name}</Txt>
               <Txt variant="muted">{buyer ? `Acquisto da ${o.seller?.username}` : `Vendita a ${o.buyer?.username}`} · {fmtDate(o.created_at)}</Txt>

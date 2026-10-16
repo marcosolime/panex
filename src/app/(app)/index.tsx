@@ -61,7 +61,7 @@ export default function Home() {
       <Card>
         <Txt variant="muted">Tasso di cambio BCP</Txt>
         <View style={[s.row, { marginTop: 6 }]}>
-          <ItemIcon name="Diamond" size={32} />
+          <ItemIcon id="diamond" size={32} />
           <Txt variant="price" style={{ fontSize: 28, lineHeight: 32, flex: 1 }}>1 Diamante = {fmt(stats.rate)} Tosi</Txt>
         </View>
       </Card>

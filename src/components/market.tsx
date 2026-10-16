@@ -87,7 +87,7 @@ export function Market({ kind }: { kind: Kind }) {
       <Card style={[s.listing, wide && s.listingWide]}>
         <View style={s.listingDetails}>
           <View style={s.row}>
-            <ItemIcon name={name} />
+            <ItemIcon id={r.item_id} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <Txt variant="title">{name}</Txt>
               <Txt variant="muted">{fmt(r.quantity)} {isReq ? 'richiesti' : 'disponibili'}</Txt>
