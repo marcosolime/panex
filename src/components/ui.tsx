@@ -19,13 +19,13 @@ export function Txt({ variant = 'body', style, ...props }: TextProps & { variant
   return <Text style={[{ color }, font, style]} {...props} />
 }
 
-export function Btn({ title, onPress, variant = 'primary', disabled, active, full, compact }: {
-  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger'; disabled?: boolean; active?: boolean; full?: boolean; compact?: boolean
+export function Btn({ title, onPress, variant = 'primary', disabled, active, full, compact, accessibilityLabel }: {
+  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger'; disabled?: boolean; active?: boolean; full?: boolean; compact?: boolean; accessibilityLabel?: string
 }) {
   const t = useTheme()
   const bg = variant === 'primary' ? t.green : variant === 'danger' ? t.red : t.soft
   return (
-    <Pressable onPress={onPress} disabled={disabled}
+    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title}
       style={({ pressed }) => [s.btnOuter, full && { alignSelf: 'stretch' },
         { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }] }]}>
       <View style={[s.btn, { backgroundColor: bg }, compact && { paddingHorizontal: 2 }]}>
@@ -89,8 +89,8 @@ export function Checkbox({ label, value, onChange }: { label: string; value: boo
 }
 
 // Menu a tendina semplice: l'elenco si apre sotto il campo.
-export function Select<T extends string>({ value, options, onChange }: {
-  value: T; options: { value: T; label: string }[]; onChange: (v: T) => void
+export function Select<T extends string>({ value, options, onChange, width }: {
+  value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; width?: number
 }) {
   const t = useTheme()
   const anchorRef = useRef<View>(null)
@@ -103,7 +103,7 @@ export function Select<T extends string>({ value, options, onChange }: {
   }
 
   return (
-    <View ref={anchorRef} collapsable={false} style={{ minWidth: 200 }}>
+    <View ref={anchorRef} collapsable={false} style={{ width, minWidth: width ?? 200 }}>
       <Pressable onPress={toggle} style={box}>
         <Txt>{options.find((o) => o.value === value)?.label}</Txt>
         <Txt>{anchor ? '⌃' : '⌄'}</Txt>

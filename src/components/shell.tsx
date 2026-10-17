@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native'
+import { Text, View, useWindowDimensions } from 'react-native'
 import { usePathname, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
@@ -37,6 +37,7 @@ const TABS = [
   ['/richieste', 'Richieste'],
   ['/ordini', 'Ordini'],
   ['/movimenti', 'Movimenti'],
+  ['/andamento', 'Andamento'],
 ] as const
 
 // Navigazione: in alto su schermi larghi, in basso su telefono.
@@ -44,15 +45,19 @@ export function Nav({ bottom }: { bottom?: boolean }) {
   const path = usePathname()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  return (
-    <View style={[{ flexDirection: 'row', gap: 8 },
-      bottom ? { backgroundColor: '#3a3a3a', borderTopWidth: 4, borderTopColor: '#000', padding: 8, paddingBottom: 8 + insets.bottom }
-             : { paddingVertical: 16 }]}>
-      {TABS.map(([href, label]) => (
-        <View key={href} style={bottom ? { flex: 1 } : undefined}>
-          <Btn title={label} variant="alt" full={bottom} compact={bottom} active={path === href} onPress={() => router.navigate(href)} />
-        </View>
-      ))}
+  const { width } = useWindowDimensions()
+  const narrow = width < 600
+  const buttons = TABS.map(([href, label]) => (
+    <View key={href} style={bottom ? { width: narrow ? '33.333%' : '16.666%', padding: 3 } : undefined}>
+      <Btn title={label} accessibilityLabel={label}
+        variant="alt" full={bottom} compact={bottom} active={path === href} onPress={() => router.navigate(href)} />
+    </View>
+  ))
+  if (bottom) return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#3a3a3a',
+      borderTopWidth: 4, borderTopColor: '#000', padding: 5, paddingBottom: 5 + insets.bottom }}>
+      {buttons}
     </View>
   )
+  return <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 16 }}>{buttons}</View>
 }
