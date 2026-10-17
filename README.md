@@ -14,7 +14,6 @@ Prezzi e importi usano `numeric(20,5)` nel database (vedi `database/panex_decima
 ## TODOs
 
 - Aggiungi icone per gli utenti (raccogli skin)
-- asset icone title
 - categorie?
 - utenti online
 - su nuovo articolo, imposta data odierna o passata
