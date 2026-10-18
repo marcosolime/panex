@@ -11,10 +11,19 @@ import { OnlineBadge } from '@/components/online-badge'
 export function AppHeader() {
   const { username } = useSession()
   const insets = useSafeAreaInsets()
+  const { width } = useWindowDimensions()
+  const narrow = width < 700
+  const name = !!username && <Text style={{ fontFamily: fonts.body, fontSize: 21, color: '#c8c8c8' }}>{username}</Text>
+  const balanceAndExit = (
+    <>
+      <BalanceChip />
+      <Btn title="Esci" variant="alt" onPress={() => supabase.auth.signOut()} />
+    </>
+  )
   return (
     <View style={{ backgroundColor: '#3a3a3a', borderBottomWidth: 4, borderBottomColor: '#000', paddingTop: insets.top }}>
-      <View style={{ width: '100%', maxWidth: 980, alignSelf: 'center', flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, padding: 12 }}>
+      <View style={{ width: '100%', maxWidth: 980, alignSelf: 'center', flexDirection: 'row', alignItems: narrow ? 'flex-start' : 'center',
+        justifyContent: 'space-between', flexWrap: narrow ? 'nowrap' : 'wrap', gap: 10, padding: 12 }}>
         <View>
           <Text style={{ fontFamily: fonts.title, fontSize: 22, textShadowColor: '#000', textShadowOffset: { width: 3, height: 3 }, textShadowRadius: 0 }}>
             <Text style={{ color: '#7ed348' }}>Pan</Text>
@@ -22,12 +31,13 @@ export function AppHeader() {
           </Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 18, color: '#c8c8c8', marginTop: 4 }}>Panera Exchange</Text>
         </View>
-        <View style={{ alignItems: 'flex-end', gap: 6 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            {!!username && <Text style={{ fontFamily: fonts.body, fontSize: 21, color: '#c8c8c8' }}>{username}</Text>}
-            <BalanceChip />
-            <Btn title="Esci" variant="alt" onPress={() => supabase.auth.signOut()} />
+        {/* Su telefono: saldo ed Esci, poi il nome, poi chi è online, tutto allineato a destra. */}
+        <View style={{ alignItems: 'flex-end', gap: 6, flexShrink: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {!narrow && name}
+            {balanceAndExit}
           </View>
+          {narrow && name}
           <OnlineBadge />
         </View>
       </View>
