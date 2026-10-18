@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { fonts } from '@/theme'
 import { BalanceChip, Btn } from '@/components/ui'
+import { OnlineBadge } from '@/components/online-badge'
 
 // Intestazione: logo, saldo, utente e pulsante Esci.
 export function AppHeader() {
@@ -21,10 +22,13 @@ export function AppHeader() {
           </Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 18, color: '#c8c8c8', marginTop: 4 }}>Panera Exchange</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {!!username && <Text style={{ fontFamily: fonts.body, fontSize: 21, color: '#c8c8c8' }}>{username}</Text>}
-          <BalanceChip />
-          <Btn title="Esci" variant="alt" onPress={() => supabase.auth.signOut()} />
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {!!username && <Text style={{ fontFamily: fonts.body, fontSize: 21, color: '#c8c8c8' }}>{username}</Text>}
+            <BalanceChip />
+            <Btn title="Esci" variant="alt" onPress={() => supabase.auth.signOut()} />
+          </View>
+          <OnlineBadge />
         </View>
       </View>
     </View>

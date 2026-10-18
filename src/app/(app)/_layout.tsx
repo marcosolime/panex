@@ -1,6 +1,7 @@
 import { ActivityIndicator, View, useWindowDimensions } from 'react-native'
 import { Redirect, Slot } from 'expo-router'
 import { useSession } from '@/lib/session'
+import { PresenceProvider } from '@/lib/presence'
 import { useTheme } from '@/theme'
 import { AppHeader, Nav } from '@/components/shell'
 
@@ -14,17 +15,19 @@ export default function AppLayout() {
 
   const wide = width >= 700
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <AppHeader />
-      {wide && (
-        <View style={{ width: '100%', maxWidth: 980, alignSelf: 'center', paddingHorizontal: 14 }}>
-          <Nav />
+    <PresenceProvider>
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
+        <AppHeader />
+        {wide && (
+          <View style={{ width: '100%', maxWidth: 980, alignSelf: 'center', paddingHorizontal: 14 }}>
+            <Nav />
+          </View>
+        )}
+        <View style={{ flex: 1, width: '100%', maxWidth: 980, alignSelf: 'center' }}>
+          <Slot />
         </View>
-      )}
-      <View style={{ flex: 1, width: '100%', maxWidth: 980, alignSelf: 'center' }}>
-        <Slot />
+        {!wide && <Nav bottom />}
       </View>
-      {!wide && <Nav bottom />}
-    </View>
+    </PresenceProvider>
   )
 }
