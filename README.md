@@ -1,71 +1,53 @@
-# PanEx
+<p align="center">
+  <img src="docs/home.png" alt="PanEx home screen" width="720">
+</p>
 
-App Expo/React Native per scambiare oggetti di gioco usando i Tosi. Gli utenti autenticati possono pubblicare offerte e richieste, aprire e confermare ordini, e consultare saldo e movimenti. L'autenticazione e i dati sono gestiti da Supabase; lo scambio degli oggetti avviene in gioco.
+```
+██████╗  █████╗ ███╗   ██╗███████╗██╗  ██╗
+██╔══██╗██╔══██╗████╗  ██║██╔════╝╚██╗██╔╝
+██████╔╝███████║██╔██╗ ██║█████╗   ╚███╔╝
+██╔═══╝ ██╔══██║██║╚██╗██║██╔══╝   ██╔██╗
+██║     ██║  ██║██║ ╚████║███████╗██╔╝ ██╗
+╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+          P A N E R A   E X C H A N G E
+```
 
-## Avvio
+> ⛏️ **The marketplace of the Panera Minecraft server.** Offers, requests and payments in **Tosi**, the server's currency. Items are handed over in-game: PanEx is the bulletin board and the ledger.
 
-1. Installa le dipendenze con `npm install`.
-2. Crea un file `.env` con `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` del progetto Supabase.
-3. Avvia l'app con `npm start`. Usa `npm run android`, `npm run ios` o `npm run web` per aprire direttamente una piattaforma.
+Built with Expo / React Native (web first) and Supabase. Invite only: accounts are created by an admin. The app is in Italian.
 
-Le schermate si trovano in `src/app/`. Il client Supabase è in `src/lib/`; le operazioni su annunci e ordini richiedono le relative tabelle e funzioni nel database Supabase. La schermata Andamento legge la vista `public.market_stats` per mostrare i prezzi degli item con almeno uno scambio concluso.
-Prezzi e importi usano `numeric(20,5)` nel database (vedi `database/panex_decimals.sql`); le quantità degli item restano intere. Il client invia prezzi e tassi come stringhe e calcola i totali in unità da 0,00001 Tosi.
+## ✨ Features
 
-## TODOs
+- 📦 **Offers** and 📜 **Requests**: publish what you sell or what you look for, with price per unit. Partial purchases are allowed.
+- 🤝 **Orders**: Tosi are locked at purchase and paid to the seller when the buyer confirms the in-game delivery. Cancelling gives the Tosi back.
+- 🪙 **Movements**: balance and full ledger of every Tosi that moved.
+- 🏦 **Home**: BCP exchange rate, total reserve, total trades, and articles written by the admins.
+- 🔎 All 1,372 items of Minecraft Java 1.21.10, with icons for about 94% of them.
 
-- Aggiungi icone per gli utenti (raccogli skin)
-- categorie?
-- utenti online
-- su nuovo articolo, imposta data odierna o passata
-- login sono username, e email si concatena
+## 🗄️ Under the hood
 
-- Messaggi buffi in schermata di login
-    const LOGIN_QUOTES = [
-    "I TOSI VANNO E I TOSI VENGONO",
-    "UN TOSI NESSUN TOSI E CENTOMILA TOSI",
-    "LO FANNO",
-    "ALL'INIZIO ERA PANERA...",
-    "LA RAILWAY COMPANY EVADE LE TASSE",
-    "FREE CIVANDE",
-    "COSBRADO VUOL DIRE QUALITÁ",
-    "LE TALPE",
-    "...ANCHE LA CENERE",
-    "MOSSA KANSAS CITY",
-    "PIZZA ICARO: METANFETAMINE E GIARE DEL SECCHIA",
-    "DIVERTENTE COME UN AFFARE S.E.R.",
-    "I VILLICI NON PROVANO EMOZIONI",
-    "AYATOLLAH CITTADINO DI AVALON",
-    "STIANO COME KIM",
-    "OSAMA BINLADEN fell from a high place",
-    "È NERA",
-    "DIE BDR SUCHT SOLDATEN",
-    "FREE CIVANDE",
-    "LA SICUREZZA SUL LAVORO È OPTIONAL",
-    "SINDACATI VS CIVANDE",
-    "LO FANNO",
-    "NOVIZI COME I PARMENSI",
-    "BRODO STRINATO AFRO PIUMATO",
-    "IL SOLE DELLA PROSPERITÀ CONTINUA A SPLENDERE SU BRASIMOGNE",
-    "GLORY TO BDR!",
-    "PER OGGI ANCORA NESSUNA MORTE SUL LAVORO A BRASIMOGNE...",
-    "/execute at @Vadim8 run summon minecraft:lightning",
-    "LE CATENE",
-    "ULRICO TE LO DICO",
-    "TOSI, VUOI ENTRARE SU PANERA?",
-    "JULIAN ASSANGE NELL'AMBASCIATA AVALONENSE",
-    "FIRST COME, FIRST SERVE",
-    "SOGNO FERROVIE DI NOTTE",
-    "MA NON È SUCCESSO NIENTE CRISPO",
-    "CRISPO METTI GIORNO CHE QUA SEMBRA LA STAZIONE DI BOLOGNA",
-    "VERITÀ PER GIULIO REGENI",
-    "IL PIL DI PANERA È DIMINUITO ANCORA...",
-    "LA BDR TI IMPONE UNA PAUSA!",
-    "LEO HIT THE GROUND TOO HARD",
-    "TEMPO DELLE PURGHE A BRASIMOGNE",
-    "NIENTE SEGHE A BRASIMOGNE",
-    "IL SEMINARIO TI ASPETTA!",
-    "LA BDR TI IMPONE DI DORMIRE, DOMANI SI LAVORA!"
-    ];
+- **Tables**: `profiles`, `items`, `listings`, `orders`, `ledger`, `articles`, `settings`
+- **Views**: `balances`, `market_stats`
+- **Functions**: `create_listing`, `update_listing`, `withdraw_listing`, `create_order`, `confirm_order`, `cancel_order`, `grant_tosi`, `create_article`, `update_article`, `delete_article`, `update_bcp`, `exchange_stats`, `search_items`
+- Row Level Security everywhere: the app can only read, and every change goes through the functions above.
+- The balance is the sum of the ledger. Amounts are exact decimals (5 places), never floats.
+- Item icons are generated from the game's own textures and are not part of this repository.
 
+## 🏆 Advancements
 
+- [x] Offers, requests, partial orders, confirmed payments
+- [x] Ledger and exact decimals
+- [x] Home with BCP data and admin articles
+- [x] Web deploy on GitHub Pages
+- [x] Andamento screen (market stats)
+- [ ] Login with username only
+- [ ] Notifications
+- [ ] Android build
+- [ ] Player skins, item categories, online players
+- [ ] Choose the publication date of articles
+- [ ] Funny quotes on the login screen
 
+## 📜 License
+
+Code under the [MIT License](LICENSE). Fonts: VT323 and Press Start 2P (SIL OFL 1.1).
+PanEx is a fan project, **not** an official Minecraft product and not affiliated with Mojang Studios or Microsoft. Tosi are a virtual currency with no real value.
