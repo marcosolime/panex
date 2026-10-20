@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { fonts, useTheme } from '@/theme'
 import { Btn, Card, Txt } from '@/components/ui'
+import { Footer, Logo } from '@/components/shell'
 
 export default function Login() {
   const { session } = useSession()
@@ -26,9 +27,10 @@ export default function Login() {
 
   const input = [s.input, { borderColor: t.line, backgroundColor: t.panel, color: t.ink }]
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[s.screen, { backgroundColor: t.bg }]}>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.screen}>
       <Card style={{ width: '100%', maxWidth: 380, gap: 12 }}>
-        <Txt variant="title" style={{ fontSize: 20, lineHeight: 30 }}>PanEx</Txt>
+        <Logo size={20} />
         <Txt variant="muted">Panera Exchange · accesso su invito</Txt>
         <TextInput style={input} placeholder="Email" placeholderTextColor={t.muted} autoCapitalize="none"
           keyboardType="email-address" value={email} onChangeText={setEmail} />
@@ -38,6 +40,8 @@ export default function Login() {
         {!!error && <Txt variant="error">{error}</Txt>}
       </Card>
     </KeyboardAvoidingView>
+    <Footer />
+    </View>
   )
 }
 
