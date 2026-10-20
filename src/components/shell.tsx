@@ -1,5 +1,5 @@
 import { Text, View, useWindowDimensions } from 'react-native'
-import { Link, usePathname, useRouter } from 'expo-router'
+import { usePathname, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
@@ -83,44 +83,13 @@ export function Nav({ bottom }: { bottom?: boolean }) {
   return <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 16 }}>{buttons}</View>
 }
 
-// Cuore pixel-art come quelli della barra vita di Minecraft.
-const HEART = ['.##.##.', '#o#####', '#######', '.#####.', '..###..', '...#...']
-const PX = 2
-
-function PixelHeart() {
-  return (
-    <View accessibilityLabel="amore" style={{ marginHorizontal: 5 }}>
-      {HEART.map((row, y) => (
-        <View key={y} style={{ flexDirection: 'row' }}>
-          {[...row].map((c, x) => (
-            <View key={x} style={{ width: PX, height: PX, backgroundColor: c === '#' ? '#e02b2b' : c === 'o' ? '#ffb3b3' : 'transparent' }} />
-          ))}
-        </View>
-      ))}
-    </View>
-  )
-}
-
-const sign = { fontFamily: fonts.body, fontSize: 17, color: '#a8a8a8', textShadowColor: '#000', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 0 } as const
-
-// Firma dell'autore, piccola e discreta, pensata per stare su sfondo scuro.
-// Su telefono una sola riga breve: il nome stesso fa da link al sito.
-const SITE = 'https://marcosolime.github.io/'
-const link = { color: '#f7c82b', textDecorationLine: 'underline' } as const
-
+// Firma dell'autore: una riga grigia e discreta, senza link.
+// In VT323 sono circa 190px, quindi sta su una riga anche sui telefoni più stretti.
 export function Signature() {
-  const narrow = useWindowDimensions().width < 500
-  const name = <>Marco (<Text style={{ color: '#ff8c1a' }}>Redfox</Text>) Solime</>
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={sign}>{narrow ? 'Con' : 'Realizzato con'}</Text>
-      <PixelHeart />
-      {narrow ? (
-        <Text style={sign} numberOfLines={1}>da <Link href={SITE} target="_blank" style={link}>{name}</Link></Text>
-      ) : (
-        <Text style={sign}>da {name} · <Link href={SITE} target="_blank" style={link}>marcosolime.github.io</Link></Text>
-      )}
-    </View>
+    <Text style={{ fontFamily: fonts.body, fontSize: 17, color: '#a8a8a8', textAlign: 'center' }}>
+      © 2026 Marco Solime · Tokyo
+    </Text>
   )
 }
 
