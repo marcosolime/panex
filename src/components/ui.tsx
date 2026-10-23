@@ -1,10 +1,10 @@
-import { useRef, useState, type ReactNode } from 'react'
-import { Image } from 'expo-image'
-import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
-import { fonts, useTheme } from '@/theme'
-import { useSession } from '@/lib/session'
 import { fmtBalance } from '@/lib/format'
+import { useSession } from '@/lib/session'
 import { supabase } from '@/lib/supabase'
+import { fonts, useTheme } from '@/theme'
+import { Image } from 'expo-image'
+import { useRef, useState, type ReactNode } from 'react'
+import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
 
 export { fmt, fmtBalance } from '@/lib/format'
 
@@ -63,13 +63,36 @@ export function ItemIcon({ id, size = 44 }: { id: string; size?: number }) {
   )
 }
 
+// Moneta Tosi. Abbassata un po' per allinearla alle lettere del font VT323.
+export function TosiIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Image source={require('@/assets/images/tosi.png')}
+      style={{ width: size, height: size, transform: [{ translateY: Math.round(size * 0.05) }] }}
+      contentFit="contain" accessibilityLabel="Tosi" />
+  )
+}
+
+// Importo in Tosi: testo, moneta, e un testo facoltativo dopo (es. "/ unità").
+// La moneta è grande in proporzione al testo, se non si indica iconSize.
+export function Amount({ children, after, iconSize, ...props }:
+  TextProps & { variant?: Variant; iconSize?: number; after?: string }) {
+  const fontSize = StyleSheet.flatten(props.style)?.fontSize ?? 22
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+      <Txt {...props}>{children}</Txt>
+      <TosiIcon size={iconSize ?? Math.round(fontSize * 2.25)} />
+      {!!after && <Txt {...props}>{after}</Txt>}
+    </View>
+  )
+}
+
 export function BalanceChip() {
   const { balance } = useSession()
   return (
     <View style={s.chip}>
-      <View style={s.coin} />
+      <TosiIcon size={40} />
       <Text style={{ fontFamily: fonts.body, fontSize: 24, color: '#fff' }}>
-        {balance === null ? '...' : fmtBalance(balance)} Tosi
+        {balance === null ? '...' : fmtBalance(balance)}
       </Text>
     </View>
   )
@@ -150,7 +173,6 @@ const s = StyleSheet.create({
   card: { borderWidth: 3, padding: 12, boxShadow: '4px 4px 0px #000' },
   badge: { alignSelf: 'flex-start', borderWidth: 2, paddingHorizontal: 6 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#262626', borderWidth: 3, borderColor: '#000', paddingHorizontal: 10, paddingVertical: 4 },
-  coin: { width: 16, height: 16, backgroundColor: '#f2b705', borderWidth: 2, borderColor: '#000' },
   select: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 3, paddingHorizontal: 8, paddingVertical: 4 },
   selectMenu: { position: 'absolute', elevation: 8 },
 })

@@ -1,11 +1,12 @@
-import { Text, View, useWindowDimensions } from 'react-native'
-import { usePathname, useRouter } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { supabase } from '@/lib/supabase'
-import { useSession } from '@/lib/session'
-import { fonts } from '@/theme'
-import { BalanceChip, Btn } from '@/components/ui'
 import { OnlineBadge } from '@/components/online-badge'
+import { BalanceChip, Btn } from '@/components/ui'
+import { useSession } from '@/lib/session'
+import { supabase } from '@/lib/supabase'
+import { fonts } from '@/theme'
+import { Image } from 'expo-image'
+import { usePathname, useRouter } from 'expo-router'
+import { Text, View, useWindowDimensions } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 // Logo PanEx: "Pan" verde, "Ex" giallo, ombra nera piena.
 export function Logo({ size = 22 }: { size?: number }) {
@@ -34,9 +35,17 @@ export function AppHeader() {
     <View style={{ backgroundColor: '#3a3a3a', borderBottomWidth: 4, borderBottomColor: '#000', paddingTop: insets.top }}>
       <View style={{ width: '100%', maxWidth: 980, alignSelf: 'center', flexDirection: 'row', alignItems: narrow ? 'flex-start' : 'center',
         justifyContent: 'space-between', flexWrap: narrow ? 'nowrap' : 'wrap', gap: 10, padding: 12 }}>
-        <View>
-          <Logo />
-          <Text style={{ fontFamily: fonts.body, fontSize: 18, color: '#c8c8c8', marginTop: 4 }}>Panera Exchange</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Image
+            source={require('@/assets/images/logo.gif')}
+            style={{ width: 72, height: 72 }}
+            contentFit="contain"
+            accessibilityLabel="Logo PanEx"
+          />
+          <View>
+            <Logo />
+            <Text style={{ fontFamily: fonts.body, fontSize: 18, color: '#c8c8c8', marginTop: 4 }}>Panera Exchange</Text>
+          </View>
         </View>
         {/* Su telefono: saldo ed Esci, poi il nome, poi chi è online, tutto allineato a destra. */}
         <View style={{ alignItems: 'flex-end', gap: 6, flexShrink: 1 }}>

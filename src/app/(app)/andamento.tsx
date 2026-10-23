@@ -1,5 +1,5 @@
 import { Dialog } from '@/components/dialogs'
-import { Badge, Btn, Card, ItemIcon, Select, Txt, fmt } from '@/components/ui'
+import { Amount, Badge, Btn, Card, ItemIcon, Select, Txt, fmt } from '@/components/ui'
 import { compareMoney } from '@/lib/format'
 import { supabase } from '@/lib/supabase'
 import { useTheme } from '@/theme'
@@ -130,7 +130,7 @@ function StatCard({ row, wide, now, onHelp }: {
       </View>
       <View style={[s.details, wide ? s.detailsWide : s.detailsNarrow]}>
         <View style={[s.mainPrice, wide && s.mainPriceWide]}>
-          <Txt variant="price" style={s.price}>{fmt(row.last_price)} T</Txt>
+          <Amount variant="price" style={s.price} iconSize={50}>{fmt(row.last_price)}</Amount>
           <Txt variant="muted" style={s.unit}>per unità</Txt>
           <Txt variant="muted" style={s.time}>Ultimo scambio · {timeAgo(row.last_trade_at, now)}</Txt>
         </View>

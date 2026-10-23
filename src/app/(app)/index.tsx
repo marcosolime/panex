@@ -1,15 +1,15 @@
-import { useCallback, useState } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { Image } from 'expo-image'
-import { useFocusEffect } from 'expo-router'
-import { supabase } from '@/lib/supabase'
-import { useSession } from '@/lib/session'
-import { useToast } from '@/lib/toast'
-import { useTheme } from '@/theme'
-import { fmtDate, money } from '@/lib/format'
-import { Btn, Card, Grid, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog } from '@/components/dialogs'
 import { ArticleDialog, BcpDialog } from '@/components/home-dialogs'
+import { Amount, Btn, Card, Grid, Txt, fmt } from '@/components/ui'
+import { fmtDate, money } from '@/lib/format'
+import { useSession } from '@/lib/session'
+import { supabase } from '@/lib/supabase'
+import { useToast } from '@/lib/toast'
+import { useTheme } from '@/theme'
+import { Image } from 'expo-image'
+import { useFocusEffect } from 'expo-router'
+import { useCallback, useState } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
 
 type Article = { id: string; title: string; body: string; created_at: string; updated_at: string | null; profiles: { username: string } | null }
 type Stats = { rate: string; reserve: number; exchanges: number; volume: string }
@@ -62,7 +62,13 @@ export default function Home() {
     { key: 'rate', node: (
       <Card>
         <Txt variant="muted">Tasso di cambio BCP</Txt>
-        <Txt variant="price" style={{ marginTop: 6, fontSize: 28, lineHeight: 32 }}>1 Diamante = {fmt(stats.rate)} Tosi</Txt>
+        <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+          <Txt variant="price" style={{ fontSize: 28, lineHeight: 32 }}>1</Txt>
+          <Image source={require('../../../assets/images/diamond.png')}
+            style={{ width: 35, height: 35, transform: [{ translateY: 0 }] }}
+            contentFit="contain" accessibilityLabel="Diamante" />
+          <Amount variant="price" style={{ fontSize: 28, lineHeight: 32 }}>= {fmt(stats.rate)}</Amount>
+        </View>
       </Card>
     ) },
     { key: 'reserve', node: (
@@ -79,7 +85,7 @@ export default function Home() {
       <Card>
         <Txt variant="muted">Scambi totali</Txt>
         <Txt style={{ fontSize: 34, lineHeight: 40 }}>{fmt(stats.exchanges)}</Txt>
-        <Txt variant="muted">{fmt(stats.volume)} Tosi scambiati</Txt>
+        <Amount variant="muted" after="scambiati">{fmt(stats.volume)}</Amount>
       </Card>
     ) },
   ]
