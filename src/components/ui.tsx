@@ -19,17 +19,22 @@ export function Txt({ variant = 'body', style, ...props }: TextProps & { variant
   return <Text style={[{ color }, font, style]} {...props} />
 }
 
-export function Btn({ title, onPress, variant = 'primary', disabled, active, full, compact, accessibilityLabel }: {
-  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger'; disabled?: boolean; active?: boolean; full?: boolean; compact?: boolean; accessibilityLabel?: string
+export function Btn({ title, onPress, variant = 'primary', disabled, active, full, compact, big, color, accessibilityLabel }: {
+  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger' | 'nav'; disabled?: boolean; active?: boolean
+  full?: boolean; compact?: boolean; big?: boolean; color?: string; accessibilityLabel?: string
 }) {
   const t = useTheme()
-  const bg = variant === 'primary' ? t.green : variant === 'danger' ? t.red : t.soft
+  const [hover, setHover] = useState(false)
+  const bg = color ?? (variant === 'primary' ? t.green : variant === 'danger' ? t.red : variant === 'nav' ? (active ? '#3f6fb5' : '#243a5a') : t.soft)
+  const glow = disabled ? 'transparent'
+  : active ? `rgba(242, 183, 5, ${hover ? 1.5 : 0.7})`
+  : /^#[0-9a-f]{6}$/i.test(bg) ? `${bg}${hover ? 'ff' : 'aa'}` : bg
   return (
-    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title}
+        <Pressable onPress={onPress} onHoverIn={() => setHover(true)} onHoverOut={() => setHover(false)} disabled={disabled} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title}
       style={({ pressed }) => [s.btnOuter, full && { alignSelf: 'stretch' },
-        { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }] }]}>
-      <View style={[s.btn, { backgroundColor: bg }, compact && { paddingHorizontal: 2 }]}>
-        <Text numberOfLines={1} style={{ fontFamily: fonts.body, fontSize: compact ? 17 : 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
+        { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }], boxShadow: `0 0 ${hover ? 32 : 12}px ${glow}` }]}>
+      <View style={[s.btn, { backgroundColor: bg }, compact && { paddingHorizontal: 2 }, big && { paddingHorizontal: 20, paddingVertical: 8 }, hover && !disabled && { filter: 'brightness(1.5)' }]}>
+        <Text numberOfLines={1} style={{ fontFamily: fonts.body, fontSize: big ? 26 : compact ? 17 : 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
       </View>
     </Pressable>
   )
