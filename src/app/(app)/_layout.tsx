@@ -4,6 +4,7 @@ import { useSession } from '@/lib/session'
 import { PresenceProvider } from '@/lib/presence'
 import { useTheme } from '@/theme'
 import { AppHeader, Nav } from '@/components/shell'
+import { Ticker } from '@/components/ticker'
 
 // Area riservata: senza accesso si torna al login. Intestazione e navigazione sono nostre, come nel prototipo.
 export default function AppLayout() {
@@ -18,6 +19,7 @@ export default function AppLayout() {
     <PresenceProvider>
       <View style={{ flex: 1, backgroundColor: t.bg }}>
         <AppHeader />
+        <Ticker />
         {wide && (
           <View style={{ width: '100%', maxWidth: 980, alignSelf: 'center', paddingHorizontal: 14 }}>
             <Nav />
