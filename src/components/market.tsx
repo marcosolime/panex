@@ -207,7 +207,7 @@ function OrderDialog({ row, isReq, onClose, onDone }: {
       <Amount variant="price">Totale: {fmt(total)}</Amount>
       {isReq
         ? <Amount variant="muted" after={`quando ${owner} conferma.`}>Riceverai {fmt(total)}</Amount>
-        : <Amount variant="muted">Saldo dopo l'acquisto: {fmt(subtractMoney(balance ?? '0', total))}</Amount>}
+        : <Amount variant="muted">{`Saldo dopo l'acquisto: ${fmt(subtractMoney(balance ?? '0', total))}`}</Amount>}
       {!!(problem || err) && <Txt variant="error">{problem || err}</Txt>}
       <View style={s.row}>
         <Btn title="Annulla" variant="alt" onPress={onClose} />

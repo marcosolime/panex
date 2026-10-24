@@ -1,10 +1,10 @@
-import { fmtBalance } from '@/lib/format'
-import { useSession } from '@/lib/session'
-import { supabase } from '@/lib/supabase'
-import { fonts, useTheme } from '@/theme'
-import { Image } from 'expo-image'
 import { useRef, useState, type ReactNode } from 'react'
+import { Image } from 'expo-image'
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextProps, type ViewProps } from 'react-native'
+import { fonts, useTheme } from '@/theme'
+import { useSession } from '@/lib/session'
+import { fmtBalance } from '@/lib/format'
+import { supabase } from '@/lib/supabase'
 
 export { fmt, fmtBalance } from '@/lib/format'
 
@@ -27,10 +27,10 @@ export function Btn({ title, onPress, variant = 'primary', disabled, active, ful
   const [hover, setHover] = useState(false)
   const bg = color ?? (variant === 'primary' ? t.green : variant === 'danger' ? t.red : variant === 'nav' ? (active ? '#3f6fb5' : '#243a5a') : t.soft)
   const glow = disabled ? 'transparent'
-  : active ? `rgba(242, 183, 5, ${hover ? 1.5 : 0.7})`
-  : /^#[0-9a-f]{6}$/i.test(bg) ? `${bg}${hover ? 'ff' : 'aa'}` : bg
+    : active ? `rgba(242, 183, 5, ${hover ? 1 : 0.7})`
+    : /^#[0-9a-f]{6}$/i.test(bg) ? `${bg}${hover ? 'ff' : 'aa'}` : bg
   return (
-        <Pressable onPress={onPress} onHoverIn={() => setHover(true)} onHoverOut={() => setHover(false)} disabled={disabled} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title}
+    <Pressable onPress={onPress} onHoverIn={() => setHover(true)} onHoverOut={() => setHover(false)} disabled={disabled} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title}
       style={({ pressed }) => [s.btnOuter, full && { alignSelf: 'stretch' },
         { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }], boxShadow: `0 0 ${hover ? 32 : 12}px ${glow}` }]}>
       <View style={[s.btn, { backgroundColor: bg }, compact && { paddingHorizontal: 2 }, big && { paddingHorizontal: 20, paddingVertical: 8 }, hover && !disabled && { filter: 'brightness(1.5)' }]}>

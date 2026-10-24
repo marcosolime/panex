@@ -1,15 +1,15 @@
-import { ConfirmDialog } from '@/components/dialogs'
-import { ArticleDialog, BcpDialog } from '@/components/home-dialogs'
-import { Amount, Btn, Card, Grid, Txt, fmt } from '@/components/ui'
-import { fmtDate, money } from '@/lib/format'
-import { useSession } from '@/lib/session'
-import { supabase } from '@/lib/supabase'
-import { useToast } from '@/lib/toast'
-import { useTheme } from '@/theme'
-import { Image } from 'expo-image'
-import { useFocusEffect } from 'expo-router'
 import { useCallback, useState } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
+import { Image } from 'expo-image'
+import { useFocusEffect } from 'expo-router'
+import { supabase } from '@/lib/supabase'
+import { useSession } from '@/lib/session'
+import { useToast } from '@/lib/toast'
+import { useTheme } from '@/theme'
+import { fmtDate, money } from '@/lib/format'
+import { Amount, Btn, Card, Grid, Txt, fmt } from '@/components/ui'
+import { ConfirmDialog } from '@/components/dialogs'
+import { ArticleDialog, BcpDialog } from '@/components/home-dialogs'
 
 type Article = { id: string; title: string; body: string; created_at: string; updated_at: string | null; profiles: { username: string } | null }
 type Stats = { rate: string; reserve: number; exchanges: number; volume: string }
@@ -64,8 +64,8 @@ export default function Home() {
         <Txt variant="muted">Tasso di cambio BCP</Txt>
         <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
           <Txt variant="price" style={{ fontSize: 28, lineHeight: 32 }}>1</Txt>
-          <Image source={require('../../../assets/images/diamond.png')}
-            style={{ width: 35, height: 35, transform: [{ translateY: 0 }] }}
+          <Image source={require('@/assets/images/diamond.png')}
+            style={{ width: 35, height: 35 }}
             contentFit="contain" accessibilityLabel="Diamante" />
           <Amount variant="price" style={{ fontSize: 28, lineHeight: 32 }}>= {fmt(stats.rate)}</Amount>
         </View>
@@ -76,7 +76,7 @@ export default function Home() {
         <Txt variant="muted">Riserva totale</Txt>
         <View style={s.row}>
           <Txt style={{ fontSize: 34, lineHeight: 40 }}>{fmt(stats.reserve)}</Txt>
-          <Image source={require('../../../assets/images/diamond.png')} style={s.itemIcon} contentFit="contain" />
+          <Image source={require('@/assets/images/diamond.png')} style={s.itemIcon} contentFit="contain" />
         </View>
         <Txt variant="muted">diamanti</Txt>
       </Card>
