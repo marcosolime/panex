@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 import { fonts, useTheme } from '@/theme'
-import { Badge, Btn, Card, Checkbox, ItemIcon, Select, Txt, fmt } from '@/components/ui'
+import { Amount, Badge, Btn, Card, Checkbox, ItemIcon, Select, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog, Dialog, ListingDialog } from '@/components/dialogs'
 import { compareMoney, money, subtractMoney } from '@/lib/format'
 
@@ -93,7 +93,9 @@ export function Market({ kind }: { kind: Kind }) {
               <Txt variant="muted">{fmt(r.quantity)} {isReq ? 'richiesti' : 'disponibili'}</Txt>
             </View>
           </View>
-          <Txt variant="price" style={{ marginTop: 8 }}>{fmt(r.unit_price)} Tosi / unità</Txt>
+          <View style={{ marginTop: 8 }}>
+            <Amount variant="price" after="/ unità">{fmt(r.unit_price)}</Amount>
+          </View>
           {!!r.note && <Txt variant="muted">Note: {r.note}</Txt>}
           <Txt variant="muted">{isReq ? 'richiesta di ' : 'di '}{r.profiles?.username ?? '?'} · {new Date(r.created_at).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</Txt>
           {r.owner_id === me && <View style={{ marginTop: 8 }}><Badge text={isReq ? 'Tua richiesta' : 'Tua offerta'} /></View>}
@@ -192,7 +194,9 @@ function OrderDialog({ row, isReq, onClose, onDone }: {
   return (
     <Dialog onClose={onClose}>
       <Txt variant="title">{isReq ? 'Vendi' : 'Compra'} {name}</Txt>
-      <Txt variant="muted">{isReq ? 'Richiesta di' : 'Venditore:'} {owner} · {fmt(row.unit_price)} Tosi / unità · {fmt(row.quantity)} {isReq ? 'richiesti' : 'disponibili'}</Txt>
+      <Amount variant="muted" after={`/ unità · ${fmt(row.quantity)} ${isReq ? 'richiesti' : 'disponibili'}`}>
+        {isReq ? 'Richiesta di' : 'Venditore:'} {owner} · {fmt(row.unit_price)}
+      </Amount>
       <View style={s.row}>
         <Btn title="−" variant="alt" onPress={() => setQty(String(Math.max(1, n - 1)))} />
         <TextInput value={qty} onChangeText={setQty} keyboardType="number-pad"
@@ -200,10 +204,10 @@ function OrderDialog({ row, isReq, onClose, onDone }: {
         <Btn title="+" variant="alt" onPress={() => setQty(String(Math.min(row.quantity, n + 1)))} />
         <Btn title="Max" variant="alt" onPress={() => setQty(String(row.quantity))} />
       </View>
-      <Txt variant="price">Totale: {fmt(total)} Tosi</Txt>
-      <Txt variant="muted">
-        {isReq ? `Riceverai ${fmt(total)} Tosi quando ${owner} conferma.` : `Saldo dopo l'acquisto: ${fmt(subtractMoney(balance ?? '0', total))} Tosi`}
-      </Txt>
+      <Amount variant="price">Totale: {fmt(total)}</Amount>
+      {isReq
+        ? <Amount variant="muted" after={`quando ${owner} conferma.`}>Riceverai {fmt(total)}</Amount>
+        : <Amount variant="muted">{`Saldo dopo l'acquisto: ${fmt(subtractMoney(balance ?? '0', total))}`}</Amount>}
       {!!(problem || err) && <Txt variant="error">{problem || err}</Txt>}
       <View style={s.row}>
         <Btn title="Annulla" variant="alt" onPress={onClose} />

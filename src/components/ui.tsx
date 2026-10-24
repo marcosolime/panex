@@ -19,17 +19,22 @@ export function Txt({ variant = 'body', style, ...props }: TextProps & { variant
   return <Text style={[{ color }, font, style]} {...props} />
 }
 
-export function Btn({ title, onPress, variant = 'primary', disabled, active, full, compact, accessibilityLabel }: {
-  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger'; disabled?: boolean; active?: boolean; full?: boolean; compact?: boolean; accessibilityLabel?: string
+export function Btn({ title, onPress, variant = 'primary', disabled, active, full, compact, big, color, accessibilityLabel }: {
+  title: string; onPress: () => void; variant?: 'primary' | 'alt' | 'danger' | 'nav'; disabled?: boolean; active?: boolean
+  full?: boolean; compact?: boolean; big?: boolean; color?: string; accessibilityLabel?: string
 }) {
   const t = useTheme()
-  const bg = variant === 'primary' ? t.green : variant === 'danger' ? t.red : t.soft
+  const [hover, setHover] = useState(false)
+  const bg = color ?? (variant === 'primary' ? t.green : variant === 'danger' ? t.red : variant === 'nav' ? (active ? '#3f6fb5' : '#243a5a') : t.soft)
+  const glow = disabled ? 'transparent'
+    : active ? `rgba(242, 183, 5, ${hover ? 1 : 0.7})`
+    : /^#[0-9a-f]{6}$/i.test(bg) ? `${bg}${hover ? 'ff' : 'aa'}` : bg
   return (
-    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title}
+    <Pressable onPress={onPress} onHoverIn={() => setHover(true)} onHoverOut={() => setHover(false)} disabled={disabled} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title}
       style={({ pressed }) => [s.btnOuter, full && { alignSelf: 'stretch' },
-        { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }] }]}>
-      <View style={[s.btn, { backgroundColor: bg }, compact && { paddingHorizontal: 2 }]}>
-        <Text numberOfLines={1} style={{ fontFamily: fonts.body, fontSize: compact ? 17 : 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
+        { borderColor: active ? t.gold : t.line, opacity: disabled ? 0.45 : 1, transform: [{ translateY: pressed ? 1 : 0 }], boxShadow: `0 0 ${hover ? 32 : 12}px ${glow}` }]}>
+      <View style={[s.btn, { backgroundColor: bg }, compact && { paddingHorizontal: 2 }, big && { paddingHorizontal: 20, paddingVertical: 8 }, hover && !disabled && { filter: 'brightness(1.5)' }]}>
+        <Text numberOfLines={1} style={{ fontFamily: fonts.body, fontSize: big ? 26 : compact ? 17 : 21, color: variant === 'alt' ? t.ink : '#fff', textAlign: 'center' }}>{title}</Text>
       </View>
     </Pressable>
   )
@@ -63,13 +68,36 @@ export function ItemIcon({ id, size = 44 }: { id: string; size?: number }) {
   )
 }
 
+// Moneta Tosi. Abbassata un po' per allinearla alle lettere del font VT323.
+export function TosiIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Image source={require('@/assets/images/tosi.png')}
+      style={{ width: size, height: size, transform: [{ translateY: Math.round(size * 0.05) }] }}
+      contentFit="contain" accessibilityLabel="Tosi" />
+  )
+}
+
+// Importo in Tosi: testo, moneta, e un testo facoltativo dopo (es. "/ unità").
+// La moneta è grande in proporzione al testo, se non si indica iconSize.
+export function Amount({ children, after, iconSize, ...props }:
+  TextProps & { variant?: Variant; iconSize?: number; after?: string }) {
+  const fontSize = StyleSheet.flatten(props.style)?.fontSize ?? 22
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+      <Txt {...props}>{children}</Txt>
+      <TosiIcon size={iconSize ?? Math.round(fontSize * 2.25)} />
+      {!!after && <Txt {...props}>{after}</Txt>}
+    </View>
+  )
+}
+
 export function BalanceChip() {
   const { balance } = useSession()
   return (
     <View style={s.chip}>
-      <View style={s.coin} />
+      <TosiIcon size={40} />
       <Text style={{ fontFamily: fonts.body, fontSize: 24, color: '#fff' }}>
-        {balance === null ? '...' : fmtBalance(balance)} Tosi
+        {balance === null ? '...' : fmtBalance(balance)}
       </Text>
     </View>
   )
@@ -150,7 +178,6 @@ const s = StyleSheet.create({
   card: { borderWidth: 3, padding: 12, boxShadow: '4px 4px 0px #000' },
   badge: { alignSelf: 'flex-start', borderWidth: 2, paddingHorizontal: 6 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#262626', borderWidth: 3, borderColor: '#000', paddingHorizontal: 10, paddingVertical: 4 },
-  coin: { width: 16, height: 16, backgroundColor: '#f2b705', borderWidth: 2, borderColor: '#000' },
   select: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 3, paddingHorizontal: 8, paddingVertical: 4 },
   selectMenu: { position: 'absolute', elevation: 8 },
 })

@@ -43,10 +43,11 @@ Built with Expo / React Native (web first) and Supabase. Invite only: accounts a
 - [ ] Login with username only
 - [ ] Notifications
 - [ ] Android build
-- [ ] Player skins, item categories, online players
+- [ ] Player skins, item categories
 - [ ] Choose the publication date of articles
 - [ ] Funny quotes on the login screen
 - [x] Online presence
+- [ ] Sound or haptic feedback
 
 ## 📜 License
 

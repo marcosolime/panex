@@ -1,4 +1,5 @@
 import { Text, View, useWindowDimensions } from 'react-native'
+import { Image } from 'expo-image'
 import { usePathname, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
@@ -34,9 +35,17 @@ export function AppHeader() {
     <View style={{ backgroundColor: '#3a3a3a', borderBottomWidth: 4, borderBottomColor: '#000', paddingTop: insets.top }}>
       <View style={{ width: '100%', maxWidth: 980, alignSelf: 'center', flexDirection: 'row', alignItems: narrow ? 'flex-start' : 'center',
         justifyContent: 'space-between', flexWrap: narrow ? 'nowrap' : 'wrap', gap: 10, padding: 12 }}>
-        <View>
-          <Logo />
-          <Text style={{ fontFamily: fonts.body, fontSize: 18, color: '#c8c8c8', marginTop: 4 }}>Panera Exchange</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Image
+            source={require('@/assets/images/logo.gif')}
+            style={{ width: 72, height: 72 }}
+            contentFit="contain"
+            accessibilityLabel="Logo PanEx"
+          />
+          <View>
+            <Logo />
+            <Text style={{ fontFamily: fonts.body, fontSize: 18, color: '#c8c8c8', marginTop: 4 }}>Panera Exchange</Text>
+          </View>
         </View>
         {/* Su telefono: saldo ed Esci, poi il nome, poi chi è online, tutto allineato a destra. */}
         <View style={{ alignItems: 'flex-end', gap: 6, flexShrink: 1 }}>
@@ -52,13 +61,15 @@ export function AppHeader() {
   )
 }
 
+// Ogni scheda ha il suo colore: scuro quando non è selezionata, acceso quando lo è.
+// Offerte e Richieste sono le principali: al centro e più grandi.
 const TABS = [
-  ['/', 'Home'],
-  ['/offerte', 'Offerte'],
-  ['/richieste', 'Richieste'],
-  ['/ordini', 'Ordini'],
-  ['/movimenti', 'Movimenti'],
-  ['/andamento', 'Andamento'],
+  { href: '/', label: 'Home', dark: '#3d4651', light: '#6b7a8c', main: false },
+  { href: '/ordini', label: 'Ordini', dark: '#203a66', light: '#3a6cc0', main: false },
+  { href: '/offerte', label: 'Offerte', dark: '#1f5a33', light: '#3aa35c', main: true },
+  { href: '/richieste', label: 'Richieste', dark: '#6b4f0c', light: '#c9971c', main: true },
+  { href: '/movimenti', label: 'Movimenti', dark: '#6a3517', light: '#c0662b', main: false },
+  { href: '/andamento', label: 'Andamento', dark: '#43275f', light: '#8150b8', main: false },
 ] as const
 
 // Navigazione: in alto su schermi larghi, in basso su telefono.
@@ -66,21 +77,28 @@ export function Nav({ bottom }: { bottom?: boolean }) {
   const path = usePathname()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const { width } = useWindowDimensions()
-  const narrow = width < 600
-  const buttons = TABS.map(([href, label]) => (
-    <View key={href} style={bottom ? { width: narrow ? '33.333%' : '16.666%', padding: 3 } : undefined}>
-      <Btn title={label} accessibilityLabel={label}
-        variant="alt" full={bottom} compact={bottom} active={path === href} onPress={() => router.navigate(href)} />
-    </View>
-  ))
+  // Su telefono le due principali hanno una riga tutta loro, sopra le altre quattro.
+  const tabs = bottom ? [...TABS.filter((x) => x.main), ...TABS.filter((x) => !x.main)] : TABS
+  const buttons = tabs.map((tab) => {
+    const active = path === tab.href
+    return (
+      <View key={tab.href} style={bottom ? { width: tab.main ? '50%' : '25%', padding: 3 } : undefined}>
+        <Btn title={tab.label} accessibilityLabel={tab.label} variant="nav" color={active ? tab.light : tab.dark}
+          full={bottom} compact={bottom && !tab.main} big={tab.main} active={active} onPress={() => router.navigate(tab.href)} />
+      </View>
+    )
+  })
   if (bottom) return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#3a3a3a',
       borderTopWidth: 4, borderTopColor: '#000', padding: 5, paddingBottom: 5 + insets.bottom }}>
       {buttons}
     </View>
   )
-  return <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 16 }}>{buttons}</View>
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 8, paddingVertical: 16 }}>
+      {buttons}
+    </View>
+  )
 }
 
 // Firma dell'autore: una riga grigia e discreta, senza link.

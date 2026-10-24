@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useSession } from '@/lib/session'
 import { useTheme } from '@/theme'
 import { compareMoney, fmtDate, money, sumMoney } from '@/lib/format'
-import { Card, Grid, Txt, fmt } from '@/components/ui'
+import { Amount, Card, Grid, Txt, fmt } from '@/components/ui'
 
 type Entry = {
   id: number; amount: string; kind: 'grant' | 'hold' | 'sale' | 'refund'; memo: string | null; created_at: string
@@ -63,7 +63,7 @@ export default function Movimenti() {
         <Grid data={stats} keyOf={(x) => x.key} render={(x) => (
           <Card>
             <Txt variant="muted">{x.label}</Txt>
-            <Txt variant={x.price ? 'price' : 'body'} style={{ fontSize: 36, lineHeight: 42 }}>{x.value} Tosi</Txt>
+            <Amount variant={x.price ? 'price' : 'body'} style={{ fontSize: 36, lineHeight: 42 }} iconSize={50}>{x.value}</Amount>
           </Card>
         )} />
         {!!error && <Txt variant="error">{error}</Txt>}

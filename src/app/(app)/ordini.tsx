@@ -6,7 +6,7 @@ import { useSession } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 import { useTheme } from '@/theme'
 import { fmtDate, money } from '@/lib/format'
-import { Badge, Btn, Card, ItemIcon, Txt, fmt } from '@/components/ui'
+import { Amount, Badge, Btn, Card, ItemIcon, Txt, fmt } from '@/components/ui'
 import { ConfirmDialog } from '@/components/dialogs'
 
 type Order = {
@@ -87,7 +87,9 @@ export default function Ordini() {
               <Txt variant="muted">{buyer ? `Acquisto da ${o.seller?.username}` : `Vendita a ${o.buyer?.username}`} · {fmtDate(o.created_at)}</Txt>
             </View>
           </View>
-          <Txt variant="price" style={{ marginTop: 8 }}>{fmt(money(o.unit_price, o.quantity))} Tosi</Txt>
+          <View style={{ marginTop: 8 }}>
+            <Amount variant="price">{fmt(money(o.unit_price, o.quantity))}</Amount>
+          </View>
           {o.status === 'pending' && (
             <Txt style={{ marginTop: 4 }}>
               {buyer ? `Aspetta la consegna da ${o.seller?.username} in gioco, poi premi Ricevuto.`
